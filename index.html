@@ -1,0 +1,2640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>玄棋 · 竖屏手机版</title>
+<style>
+:root{
+  --bg:#05070f; --panel:rgba(18,26,45,.62); --line:rgba(120,190,255,.16);
+  --red:#ff4d63; --red-soft:#ff8b98; --cyan:#2fe0ff; --cyan-soft:#9df0ff;
+  --gold:#ffce6a; --txt:#dce7f7; --dim:#7d8db0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--txt); overflow-x:hidden;
+  font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:-20%;z-index:-2;
+  background:
+    radial-gradient(45% 40% at 18% 12%, rgba(255,60,90,.20), transparent 65%),
+    radial-gradient(45% 45% at 85% 20%, rgba(30,200,255,.18), transparent 65%),
+    radial-gradient(60% 50% at 50% 100%, rgba(120,70,255,.16), transparent 70%);
+  filter:blur(20px);animation:drift 22s ease-in-out infinite alternate;
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(90,160,230,.06) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(90,160,230,.06) 1px,transparent 1px);
+  background-size:46px 46px;
+  mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent 85%);
+}
+@keyframes drift{0%{transform:translate3d(-2%,-1%,0) scale(1)}100%{transform:translate3d(3%,2%,0) scale(1.12)}}
+
+.stage{max-width:1280px;margin:0 auto;padding:18px 16px 34px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+  width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+  font-family:"KaiTi","STKaiti",serif;font-size:27px;font-weight:700;color:#fff2f4;
+  background:linear-gradient(150deg,#7a1220,#2a0710);border:1px solid rgba(255,110,130,.55);
+  box-shadow:0 0 22px rgba(255,60,90,.45),inset 0 0 14px rgba(255,90,110,.25);
+}
+.brand h1{
+  font-size:25px;letter-spacing:5px;font-weight:800;
+  background:linear-gradient(92deg,#fff,#ffcf7a 35%,#ff6a80 60%,#54e6ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 12px rgba(255,120,150,.35));
+}
+.brand p{font-size:11.5px;color:var(--dim);letter-spacing:2.5px;margin-top:3px}
+.top-actions{display:flex;gap:8px;align-items:center}
+
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.icon-btn{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:var(--panel);border:1px solid var(--line);color:var(--cyan-soft);
+  transition:.18s;backdrop-filter:blur(8px);
+}
+.icon-btn:hover{border-color:rgba(60,220,255,.6);box-shadow:0 0 16px rgba(40,210,255,.28);transform:translateY(-1px)}
+.icon-btn.off{color:#5b6a86}
+.icon-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ghost-btn{
+  padding:9px 16px;border-radius:11px;font-size:13px;letter-spacing:1px;font-weight:600;
+  background:linear-gradient(140deg,rgba(255,70,100,.22),rgba(255,70,100,.06));
+  border:1px solid rgba(255,110,135,.45);color:#ffd7dc;transition:.18s;
+}
+.ghost-btn:hover{box-shadow:0 0 20px rgba(255,70,100,.35);transform:translateY(-1px)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 306px;gap:18px;align-items:start}
+.board-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.side-col{display:flex;flex-direction:column;gap:12px;position:sticky;top:16px}
+
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:13px 14px;backdrop-filter:blur(12px);
+  box-shadow:0 10px 34px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.panel h3{
+  font-size:11px;letter-spacing:3px;color:var(--dim);font-weight:700;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+.player-bar{
+  display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:14px;
+  background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(10px);transition:.25s;
+}
+.player-bar.active{border-color:rgba(255,206,106,.55);box-shadow:0 0 22px rgba(255,190,90,.18)}
+.avatar{
+  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-family:"KaiTi","STKaiti",serif;font-size:20px;font-weight:700;
+}
+.avatar.red{color:#ffe3e7;background:radial-gradient(circle at 34% 28%,#8d1c2b,#2b0710);border:1px solid rgba(255,110,130,.6);box-shadow:0 0 14px rgba(255,60,90,.35)}
+.avatar.black{color:#dcf7ff;background:radial-gradient(circle at 34% 28%,#14485c,#06121c);border:1px solid rgba(70,220,255,.55);box-shadow:0 0 14px rgba(40,200,255,.3)}
+.pmeta{flex:1;min-width:0}
+.pname{font-size:13.5px;font-weight:700;letter-spacing:.6px;display:flex;align-items:center;gap:7px}
+.tag{font-size:9.5px;padding:2px 7px;border-radius:20px;letter-spacing:1px;font-weight:600;
+  background:rgba(120,190,255,.12);border:1px solid var(--line);color:var(--cyan-soft)}
+.psub{font-size:10.5px;color:var(--dim);margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;min-height:15px}
+.mini{font-family:"KaiTi","STKaiti",serif;font-size:12px;opacity:.85}
+.clock{font-variant-numeric:tabular-nums;font-size:15px;font-weight:700;letter-spacing:1px;color:#b9c9e6;
+  padding:4px 9px;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+.player-bar.active .clock{color:var(--gold);border-color:rgba(255,206,106,.35)}
+.clock.warn{color:#ff5a72;border-color:rgba(255,90,114,.6);box-shadow:0 0 14px rgba(255,60,90,.4);animation:clockPulse .5s infinite}
+@keyframes clockPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.ladder-info{margin-top:10px;text-align:center;font-size:11.5px;letter-spacing:1.5px;color:var(--gold)}
+
+.board-frame{
+  position:relative;width:100%;max-width:604px;margin:0 auto;border-radius:20px;
+  background:linear-gradient(160deg,rgba(24,36,62,.75),rgba(8,12,24,.85));
+  border:1px solid rgba(120,190,255,.22);padding:6px;
+  box-shadow:0 22px 60px rgba(0,0,0,.6),0 0 44px rgba(40,140,255,.10),inset 0 1px 0 rgba(255,255,255,.07);
+}
+.board-frame.shake{animation:shake .34s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+canvas#board{display:block;width:100%;height:auto;border-radius:15px;touch-action:manipulation;cursor:pointer}
+canvas#fx{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);pointer-events:none;border-radius:15px}
+
+.banner{
+  position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.6);
+  font-family:"KaiTi","STKaiti",serif;font-size:64px;font-weight:800;letter-spacing:12px;
+  color:#fff;opacity:0;pointer-events:none;text-shadow:0 0 26px currentColor,0 0 60px currentColor;
+}
+.banner.show{animation:bannerIn 1.25s cubic-bezier(.2,.9,.2,1)}
+@keyframes bannerIn{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+  30%{transform:translate(-50%,-50%) scale(1)}
+  75%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.06)}
+}
+.thinking{
+  position:absolute;left:50%;top:12px;transform:translateX(-50%);
+  display:none;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;
+  background:rgba(6,12,24,.82);border:1px solid rgba(60,220,255,.4);
+  font-size:11.5px;letter-spacing:1px;color:var(--cyan-soft);backdrop-filter:blur(6px);
+  box-shadow:0 0 22px rgba(40,200,255,.22);white-space:nowrap;
+}
+.thinking.on{display:flex}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+
+.eval-row{display:flex;align-items:center;gap:9px;font-size:10.5px;color:var(--dim);letter-spacing:1px}
+.eval-bar{flex:1;height:9px;border-radius:6px;overflow:hidden;display:flex;background:rgba(0,0,0,.4);border:1px solid var(--line)}
+.eval-red{background:linear-gradient(90deg,#ff3d55,#ff8b98);box-shadow:0 0 12px rgba(255,60,90,.6);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.eval-black{flex:1;background:linear-gradient(90deg,#1d7f9c,#2fe0ff);box-shadow:0 0 12px rgba(40,210,255,.45)}
+.eval-num{font-variant-numeric:tabular-nums;font-size:11px;color:#a9bad8;min-width:44px;text-align:right}
+
+#moveList{max-height:262px;overflow-y:auto;font-size:12.5px;scrollbar-width:thin;scrollbar-color:rgba(120,190,255,.3) transparent}
+#moveList::-webkit-scrollbar{width:5px}
+#moveList::-webkit-scrollbar-thumb{background:rgba(120,190,255,.28);border-radius:4px}
+.mv-row{display:grid;grid-template-columns:30px 1fr 1fr;gap:6px;padding:4px 5px;border-radius:7px;align-items:center}
+.mv-row:nth-child(odd){background:rgba(255,255,255,.028)}
+.mv-no{color:#5f6f90;font-size:10.5px;font-variant-numeric:tabular-nums}
+.mv{font-family:"KaiTi","STKaiti",serif;font-size:14px;letter-spacing:1px;padding:1px 5px;border-radius:5px;cursor:default}
+.mv.r{color:var(--red-soft)}.mv.b{color:var(--cyan-soft)}
+.mv.last{background:rgba(255,206,106,.16);color:var(--gold);box-shadow:inset 0 0 0 1px rgba(255,206,106,.3)}
+.empty-hint{color:#5b6a86;font-size:11.5px;text-align:center;padding:16px 0;letter-spacing:1px}
+
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ctrl{
+  padding:10px 6px;border-radius:11px;font-size:12.5px;letter-spacing:1.5px;font-weight:600;
+  background:rgba(255,255,255,.045);border:1px solid var(--line);color:#c3d3ee;transition:.16s;
+}
+.ctrl:hover:not(:disabled){background:rgba(60,200,255,.13);border-color:rgba(60,220,255,.5);color:#eafaff;transform:translateY(-1px)}
+.ctrl:disabled{opacity:.32;cursor:not-allowed}
+.ctrl.danger:hover:not(:disabled){background:rgba(255,70,100,.15);border-color:rgba(255,110,135,.55);color:#ffdde1}
+.ctrl.wide{grid-column:1/-1}
+/* 操作工具条：默认紧贴棋盘下方，四个按钮横排 */
+.ops-panel{padding:9px 12px}
+.ops-panel h3,.ops-panel .tips{display:none}
+.ops-panel .ctrl-grid{grid-template-columns:repeat(4,1fr)}
+.ops-panel .ctrl{min-height:42px}
+.ops-panel .status-line{margin-top:7px}
+.status-line{margin-top:10px;font-size:11.5px;color:var(--dim);letter-spacing:1px;text-align:center;min-height:16px}
+.status-line b{color:var(--gold);font-weight:700}
+
+.modal{
+  position:fixed;inset:0;z-index:50;display:none;padding:20px;overflow:auto;
+  background:rgba(3,6,14,.78);backdrop-filter:blur(9px);
+}
+.modal.on{display:flex;animation:fade .25s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.card{
+  width:min(520px,100%);margin:auto;border-radius:22px;padding:26px 24px;
+  background:linear-gradient(160deg,rgba(26,38,66,.96),rgba(9,14,28,.98));
+  border:1px solid rgba(120,190,255,.28);
+  box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 60px rgba(50,150,255,.14);
+  animation:pop .3s cubic-bezier(.2,.9,.25,1.1);
+}
+@keyframes pop{from{transform:translateY(16px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.card h2{font-size:21px;letter-spacing:4px;text-align:center;margin-bottom:5px;
+  background:linear-gradient(92deg,#fff,#ffcf7a,#ff7a90,#54e6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card .sub{text-align:center;font-size:11.5px;color:var(--dim);letter-spacing:2px;margin-bottom:20px}
+.opt-label{font-size:10.5px;letter-spacing:2.5px;color:var(--dim);margin:16px 0 9px;font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.opts.four{grid-template-columns:repeat(4,1fr)}
+.opts.five{grid-template-columns:repeat(5,1fr)}
+.opts.six{grid-template-columns:repeat(3,1fr)}
+.intro{margin-top:12px;padding:13px 14px;border-radius:12px;background:rgba(0,0,0,.26);border:1px solid var(--line);
+  font-size:11.5px;line-height:1.9;color:#b9c8e6;letter-spacing:.6px;text-align:left}
+.intro .ttl{font-family:"KaiTi","STKaiti",serif;font-size:16px;color:var(--gold);letter-spacing:3px;margin-bottom:4px}
+.intro .src{font-size:10.5px;color:#7fa9d8;letter-spacing:1px;margin-bottom:7px}
+.intro .aim{color:#8ef0d0}
+.intro .pt{color:#e7c98a}
+.intro b{color:#dbe7ff;font-weight:700}
+.intro .tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:20px;font-size:10px;letter-spacing:1px;
+  background:rgba(255,206,106,.14);border:1px solid rgba(255,206,106,.4);color:#ffce6a;vertical-align:2px}
+.swatch{display:inline-block;width:13px;height:13px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35);box-shadow:0 0 8px rgba(255,255,255,.15)}
+.set-file{display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 11px;border-radius:11px;background:rgba(0,0,0,.25);border:1px dashed var(--line)}
+.set-file .ghost-btn{padding:7px 12px;font-size:11.5px;white-space:nowrap}
+.set-file span{font-size:11px;color:var(--dim);letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slider-row{display:flex;align-items:center;gap:11px;margin-top:13px;font-size:11.5px;color:var(--dim);letter-spacing:1px}
+.slider-row span{min-width:58px}
+.slider-row b{min-width:62px;text-align:right;color:#a9bad8;font-size:11px;font-variant-numeric:tabular-nums}
+.slider-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:4px;background:rgba(120,190,255,.22);outline:none}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:linear-gradient(135deg,#54e6ff,#ffce6a);box-shadow:0 0 10px rgba(80,220,255,.6);cursor:pointer}
+.slider-row input[type=range]::-moz-range-thumb{width:15px;height:15px;border:none;border-radius:50%;background:linear-gradient(135deg,#54e6ff,#ffce6a);box-shadow:0 0 10px rgba(80,220,255,.6);cursor:pointer}
+.opt{
+  padding:13px 6px;border-radius:13px;text-align:center;transition:.18s;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+}
+.opt:hover{transform:translateY(-2px);border-color:rgba(120,200,255,.45)}
+.opt.sel{background:linear-gradient(150deg,rgba(255,206,106,.2),rgba(255,120,150,.1));border-color:rgba(255,206,106,.7);box-shadow:0 0 22px rgba(255,190,90,.22)}
+.opt .t{font-size:15px;font-weight:700;letter-spacing:2px;font-family:"KaiTi","STKaiti",serif}
+.opt .d{font-size:10px;color:var(--dim);margin-top:5px;letter-spacing:.5px}
+.opt.sel .t{color:var(--gold)}
+.start-btn{
+  width:100%;margin-top:22px;padding:14px;border-radius:13px;font-size:15px;font-weight:800;letter-spacing:6px;
+  color:#06121a;background:linear-gradient(95deg,#54e6ff,#8ef0d0 45%,#ffce6a);
+  box-shadow:0 10px 30px rgba(60,210,255,.28);transition:.18s;
+}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(60,210,255,.42)}
+.result-title{font-family:"KaiTi","STKaiti",serif;font-size:52px;text-align:center;letter-spacing:10px;margin:6px 0 4px;text-shadow:0 0 34px currentColor}
+.result-title.win{color:#ffce6a}.result-title.lose{color:#7f93b8}.result-title.draw{color:#54e6ff}
+.result-reason{text-align:center;font-size:12.5px;color:var(--dim);letter-spacing:2px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:6px}
+.stat{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:11px 6px;text-align:center}
+.stat .v{font-size:19px;font-weight:800;color:#e7f1ff;font-variant-numeric:tabular-nums}
+.stat .k{font-size:10px;color:var(--dim);letter-spacing:1.5px;margin-top:4px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+.row2 .ghost-btn{padding:12px;text-align:center}
+.solid-btn{padding:12px;border-radius:11px;font-size:13px;font-weight:700;letter-spacing:2px;text-align:center;
+  color:#06121a;background:linear-gradient(95deg,#54e6ff,#ffce6a);transition:.18s}
+.solid-btn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(60,210,255,.3)}
+.tips{margin-top:14px;font-size:10.5px;color:#5f6f90;letter-spacing:1px;text-align:center;line-height:1.8}
+kbd{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-family:inherit;font-size:10px}
+
+/* ---------- 经典杀招训练 ---------- */
+.mate-panel{display:none}
+.mate-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+.mate-head .n{font-family:"KaiTi","STKaiti",serif;font-size:19px;font-weight:700;color:var(--gold);letter-spacing:2px}
+.mate-head .c{font-size:10px;letter-spacing:1px;color:#7fa9d8;padding:2px 7px;border-radius:20px;background:rgba(120,190,255,.1);border:1px solid var(--line)}
+.mate-quest{font-size:11.5px;line-height:1.8;color:#b9c8e6;background:rgba(0,0,0,.24);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:9px}
+.mate-quest b{color:#8ef0d0;font-weight:700}
+.mate-quest .pt{display:block;margin-top:5px;color:#e7c98a}
+.mate-dots{display:flex;align-items:center;gap:7px;margin:2px 0 10px;font-size:10.5px;color:var(--dim);letter-spacing:1px}
+.mate-dot{width:22px;height:7px;border-radius:4px;background:rgba(120,190,255,.16);border:1px solid var(--line)}
+.mate-dot.done{background:linear-gradient(90deg,#54e6ff,#8ef0d0);box-shadow:0 0 9px rgba(80,220,255,.5)}
+.mate-dot.cur{background:var(--gold);box-shadow:0 0 10px rgba(255,206,106,.6)}
+.mate-bar{display:inline-block;width:110px;height:7px;border-radius:4px;background:rgba(120,190,255,.16);border:1px solid var(--line);overflow:hidden}
+.mate-bar i{display:block;height:100%;background:linear-gradient(90deg,#54e6ff,#8ef0d0)}
+.mate-line{font-size:10.5px;color:#7f93b8;letter-spacing:.5px;line-height:1.7;margin-bottom:9px;min-height:16px}
+.mate-line b{color:var(--gold)}
+.mate-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 9px}
+.mate-tab{padding:5px 11px;border-radius:20px;font-size:10.5px;letter-spacing:1px;cursor:pointer;
+  background:rgba(120,190,255,.07);border:1px solid var(--line);color:#9fb4d6;transition:.16s}
+.mate-tab:hover{border-color:rgba(120,190,255,.5);color:#e6f2ff}
+.mate-tab.sel{background:linear-gradient(140deg,rgba(255,206,106,.2),rgba(255,120,150,.08));border-color:rgba(255,206,106,.55);color:var(--gold);font-weight:700}
+.mate-group{grid-column:1/-1;display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  margin:9px 2px 3px;padding-bottom:5px;border-bottom:1px solid var(--line);
+  font-family:"KaiTi","STKaiti",serif;font-size:14px;letter-spacing:2px;color:var(--gold)}
+.mate-group small{font-family:inherit;font-size:10px;letter-spacing:.5px;color:#7f93b8}
+#mateOpts{max-height:250px;overflow-y:auto;padding:2px;scrollbar-width:thin;scrollbar-color:rgba(120,190,255,.3) transparent}
+#mateOpts::-webkit-scrollbar{width:5px}
+#mateOpts::-webkit-scrollbar-thumb{background:rgba(120,190,255,.28);border-radius:4px}
+#modeOpts .opt[data-mode="drill"]{grid-column:2/-1;background:linear-gradient(140deg,rgba(255,206,106,.11),rgba(255,120,150,.05));border-color:rgba(255,206,106,.38)}
+.mate-opt{position:relative}
+.mate-opt .star{position:absolute;top:4px;right:6px;font-size:9.5px;color:var(--gold);letter-spacing:0}
+.mate-opt .t{font-size:13.5px;letter-spacing:1px}
+.mate-opt .d{font-size:9.5px}
+.mate-opt.cleared{border-color:rgba(140,240,200,.4)}
+.mate-opt.cleared .t{color:#8ef0d0}
+.mate-stars{text-align:center;font-size:36px;letter-spacing:10px;color:var(--gold);text-shadow:0 0 20px rgba(255,206,106,.55);margin:8px 0 4px}
+.mate-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 4px}
+.mate-stats .stat{padding:9px 4px}
+.mate-stats .stat .v{font-size:16px}
+.mate-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.mate-btns button{padding:11px 3px;border-radius:11px;font-size:11.5px;letter-spacing:1px;font-weight:600;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:#c3d3ee;transition:.16s}
+.mate-btns button:hover{border-color:rgba(60,220,255,.55);color:#eafaff;transform:translateY(-1px)}
+.mate-btns button.primary{color:#06121a;background:linear-gradient(95deg,#54e6ff,#ffce6a);border:none}
+.mate-banner{display:inline-block;margin:0 0 8px;padding:3px 10px;border-radius:20px;font-size:10px;letter-spacing:2px;
+  background:rgba(255,206,106,.14);border:1px solid rgba(255,206,106,.4);color:var(--gold)}
+@media(max-width:940px){
+  .layout{grid-template-columns:1fr}
+  .side-col{position:static;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .side-col .panel:nth-child(2){grid-column:1/-1;order:3}
+  #moveList{max-height:180px}
+}
+@media(max-width:560px){
+  .stage{padding:12px 9px 26px}
+  .brand h1{font-size:20px;letter-spacing:3px}
+  .logo{width:38px;height:38px;font-size:22px}
+  .side-col{grid-template-columns:1fr}
+  .banner{font-size:44px;letter-spacing:7px}
+  .opts{grid-template-columns:repeat(2,1fr)}
+  .opts.five,.opts.six{grid-template-columns:repeat(2,1fr)}
+  .mate-tabs{grid-template-columns:repeat(2,1fr)}
+  .card{padding:20px 16px}
+}
+
+/* ---------- 手机竖屏：单手可玩的重排（桌面布局不受影响） ---------- */
+@media (max-width:600px) and (orientation:portrait){
+  html,body{-webkit-text-size-adjust:100%}
+  body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+  .stage{padding:calc(8px + env(safe-area-inset-top,0px)) 10px 16px}
+
+  /* 顶栏压成一行，图标按钮保持可点尺寸 */
+  .topbar{flex-wrap:nowrap;gap:8px;margin-bottom:9px}
+  .brand{gap:8px;flex:none}
+  .logo{width:34px;height:34px;border-radius:11px;font-size:20px}
+  .brand h1{font-size:19px;letter-spacing:2px}
+  .brand p{display:none}
+  .top-actions{flex:1;justify-content:flex-end;gap:5px}
+  .icon-btn{width:36px;height:36px;border-radius:10px}
+  .icon-btn svg{width:17px;height:17px}
+  .top-actions .ghost-btn{padding:9px 9px;font-size:11.5px;letter-spacing:0}
+
+  /* 棋盘区紧凑，尽量占满首屏宽度 */
+  .board-col{gap:7px}
+  .player-bar{padding:7px 10px;gap:8px;border-radius:12px}
+  .avatar{width:30px;height:30px;font-size:17px}
+  .pname{font-size:12.5px}
+  .psub{font-size:10px;min-height:0}
+  .clock{font-size:13px;padding:3px 7px}
+  .thinking{top:8px;font-size:11px}
+  .banner{font-size:40px;letter-spacing:6px}
+
+  /* 形势 + 棋谱并排省高度；「操作」变成底部常驻工具栏 */
+  .side-col{display:grid;grid-template-columns:1fr 1fr;gap:9px;position:static}
+  .side-col .panel{padding:10px 11px;border-radius:14px}
+  .side-col .panel h3{font-size:10px;letter-spacing:2px;margin-bottom:8px}
+  .side-col .panel:nth-child(2){grid-column:auto;order:0}
+  #matePanel{grid-column:1/-1}
+  #moveList{max-height:92px;font-size:12px}
+  .mv{font-size:13px}
+  .eval-row{font-size:10px;gap:5px}
+  .eval-bar{height:8px}
+  #opsPanel{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;
+    border-radius:18px 18px 0 0;border-bottom:none;
+    padding:9px 10px calc(10px + env(safe-area-inset-bottom,0px));
+    background:rgba(9,15,28,.95);
+    box-shadow:0 -10px 30px rgba(0,0,0,.55);
+  }
+  #opsPanel h3,
+  #opsPanel .tips{display:none}
+  #opsPanel .ctrl-grid{grid-template-columns:repeat(4,1fr);gap:7px}
+  #opsPanel .ctrl{min-height:46px;padding:9px 3px;font-size:13px;letter-spacing:.5px}
+  #opsPanel .status-line{margin-top:7px;font-size:11px;min-height:14px}
+
+  /* 弹窗从顶部开始排，内容多可滚动，按钮加大到可点 */
+  .modal{padding:calc(10px + env(safe-area-inset-top,0px)) 10px calc(14px + env(safe-area-inset-bottom,0px))}
+  .modal.on{align-items:flex-start}
+  .card{width:100%;margin:0 auto;padding:18px 14px;border-radius:18px}
+  .card h2{font-size:19px;letter-spacing:3px}
+  .card .sub{font-size:10.5px;margin-bottom:14px}
+  .opt-label{margin:12px 0 7px;font-size:10px}
+  .opts,.opts.three,.opts.four,.opts.five,.opts.six{grid-template-columns:repeat(2,1fr);gap:7px}
+  .opt{padding:11px 5px;min-height:52px}
+  .opt .t{font-size:15px}
+  .opt .d{font-size:10px}
+  .start-btn{margin-top:16px;padding:15px;min-height:52px}
+  #mateOpts{max-height:34vh}
+  .intro{font-size:11px;line-height:1.75;padding:10px 11px}
+  .mate-btns button{min-height:44px}
+
+  /* 触摸细节：去掉点击高亮、避免长按选中 */
+  button,.opt,.ctrl{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .board-frame,.player-bar,.side-col{user-select:none;-webkit-user-select:none}
+}
+
+/* ---------- 最终布局：手机竖屏优先，默认单列（所有窗口宽度都生效） ----------
+   顺序：顶部设置 → 棋盘 → 操作按钮 → 玩家条 → 形势 / 棋谱
+   放在样式表最后，统一覆盖上面几组旧的响应式规则 */
+html,body{-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.stage{max-width:460px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top,0px)) 11px 24px}
+
+/* 上方：品牌 + 音乐 / 音效 / 翻转 / 设置 / 新对局，一行放下 */
+.topbar{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.brand{gap:8px;flex:none}
+.logo{width:36px;height:36px;border-radius:11px;font-size:21px}
+.brand h1{font-size:19px;letter-spacing:2px}
+.brand p{display:none}
+.top-actions{flex:1;justify-content:flex-end;gap:5px}
+.icon-btn{width:34px;height:34px;border-radius:10px}
+.icon-btn svg{width:17px;height:17px}
+.top-actions .ghost-btn{padding:9px 8px;font-size:11.5px;letter-spacing:0;white-space:nowrap}
+
+/* 主体单列：所有面板按 DOM 顺序堆在棋盘下方 */
+.layout{display:block}
+.board-col{gap:8px}
+.board-frame{max-width:604px;padding:5px;border-radius:16px}
+.player-bar{padding:7px 10px;gap:8px;border-radius:12px}
+.avatar{width:30px;height:30px;font-size:17px}
+.pname{font-size:12.5px}
+.psub{font-size:10px;min-height:0}
+.clock{font-size:13px;padding:3px 7px}
+.thinking{top:8px;font-size:11px}
+.banner{font-size:40px;letter-spacing:6px}
+
+/* 操作条：紧跟棋盘、四键横排、流式排布（不再固定到屏幕底部） */
+#opsPanel{
+  position:static;left:auto;right:auto;bottom:auto;z-index:auto;margin:0;
+  border-radius:14px;border-bottom:1px solid var(--line);
+  padding:9px 11px;background:var(--panel);box-shadow:none;
+}
+#opsPanel h3,#opsPanel .tips{display:none}
+#opsPanel .ctrl-grid{grid-template-columns:repeat(4,1fr);gap:7px}
+#opsPanel .ctrl{min-height:44px;padding:9px 2px;font-size:12.5px;letter-spacing:.5px}
+#opsPanel .status-line{margin-top:7px;font-size:11px;min-height:14px}
+
+/* 下方：形势 + 棋谱并排，训练闯关独占一行 */
+.side-col{display:grid;grid-template-columns:1fr 1fr;gap:9px;position:static;top:auto;margin-top:0}
+.side-col .panel{padding:10px 11px;border-radius:14px}
+.side-col .panel h3{font-size:10px;letter-spacing:2px;margin-bottom:8px}
+.side-col .panel:nth-child(2){grid-column:auto;order:0}
+#matePanel{grid-column:1/-1}
+#moveList{max-height:112px;font-size:12px}
+.mv{font-size:13px}
+.eval-row{font-size:10px;gap:5px}
+.eval-bar{height:8px}
+.eval-num{min-width:36px;font-size:10px}
+
+/* 弹窗：从顶部排、两列大按钮 */
+.modal{padding:calc(10px + env(safe-area-inset-top,0px)) 10px calc(14px + env(safe-area-inset-bottom,0px))}
+.modal.on{align-items:flex-start}
+.card{width:100%;max-width:420px;margin:0 auto;padding:18px 14px;border-radius:18px}
+.card h2{font-size:19px;letter-spacing:3px}
+.card .sub{font-size:10.5px;margin-bottom:14px}
+.opt-label{margin:12px 0 7px;font-size:10px}
+.opts,.opts.three,.opts.four,.opts.five,.opts.six{grid-template-columns:repeat(2,1fr);gap:7px}
+#modeOpts .opt[data-mode="drill"]{grid-column:auto}
+.opt{padding:11px 5px;min-height:52px}
+.opt .t{font-size:15px}
+.opt .d{font-size:10px}
+.start-btn{margin-top:16px;padding:15px;min-height:52px}
+#mateOpts{max-height:34vh}
+.mate-tabs{grid-template-columns:repeat(2,1fr)}
+.intro{font-size:11px;line-height:1.75;padding:10px 11px}
+.mate-btns button{min-height:44px}
+
+button,.opt,.ctrl{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.board-frame,.player-bar,.side-col{user-select:none;-webkit-user-select:none}
+</style>
+<meta name="theme-color" content="#05070f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="玄棋">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<div class="stage">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">象</div>
+      <div><h1>玄棋</h1><p>XIANGQI · 人机对战</p></div>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="btnMusic" title="背景音乐开关">
+        <svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
+      </button>
+      <button class="icon-btn" id="btnSound" title="音效开关 (M)">
+        <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 8.5a5 5 0 0 1 0 7" id="wave"/></svg>
+      </button>
+      <button class="icon-btn" id="btnFlip" title="翻转棋盘 (F)">
+        <svg viewBox="0 0 24 24"><path d="M7 4v13M7 4L4 7.5M7 4l3 3.5"/><path d="M17 20V7M17 20l3-3.5M17 20l-3-3.5"/></svg>
+      </button>
+      <button class="icon-btn" id="btnSettings" title="设置 · 皮肤 · 音乐">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"/></svg>
+      </button>
+      <button class="ghost-btn" id="btnSetup">新对局</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="board-col">
+      <div class="player-bar" id="barTop"></div>
+      <div class="board-frame" id="frame">
+        <canvas id="board"></canvas>
+        <canvas id="fx"></canvas>
+        <div class="thinking" id="thinking"><span class="pulse"></span><span id="thinkText">AI 思考中</span></div>
+        <div class="banner" id="banner"></div>
+      </div>
+      <div class="panel ops-panel" id="opsPanel">
+        <h3>操作</h3>
+        <div class="ctrl-grid">
+          <button class="ctrl" id="btnHint">提 示</button>
+          <button class="ctrl" id="btnUndo">悔 棋</button>
+          <button class="ctrl danger" id="btnResign">认 输</button>
+          <button class="ctrl" id="btnRestart">重 开</button>
+        </div>
+        <div class="status-line" id="statusLine">选择难度开始对局</div>
+        <div class="tips"><kbd>H</kbd> 提示 · <kbd>U</kbd> 悔棋 · <kbd>R</kbd> 重练 · <kbd>[</kbd><kbd>]</kbd> 换关 · <kbd>F</kbd> 翻转 · <kbd>M</kbd> 静音</div>
+      </div>
+      <div class="player-bar" id="barBottom"></div>
+
+      <aside class="side-col">
+      <div class="panel">
+        <h3>形势</h3>
+        <div class="eval-row">
+          <span>红</span>
+          <div class="eval-bar"><div class="eval-red" id="evalRed" style="width:50%"></div><div class="eval-black"></div></div>
+          <span>黑</span>
+        </div>
+        <div class="eval-row" style="margin-top:8px"><span id="evalText">局面均衡</span><span class="eval-num" id="evalNum">0.0</span></div>
+      </div>
+
+      <div class="panel">
+        <h3>棋谱</h3>
+        <div id="moveList"><div class="empty-hint">尚未落子</div></div>
+      </div>
+
+      <div class="panel mate-panel" id="matePanel">
+        <h3>训练闯关</h3>
+        <div id="mateDetail"></div>
+        <div class="ctrl-grid" style="margin-top:4px">
+          <button class="ctrl" id="btnMateHint">参考着法</button>
+          <button class="ctrl" id="btnMateRestart">重练本关</button>
+          <button class="ctrl wide" id="btnMateSelect">返回选关 / 换一关</button>
+        </div>
+      </div>
+      </aside>
+    </section>
+  </main>
+</div>
+
+<div class="modal on" id="setupModal">
+  <div class="card">
+    <h2>开 局 设 置</h2>
+    <div class="sub">选择模式 · 对手棋力 · 执子颜色</div>
+    <div class="opt-label">对局模式</div>
+    <div class="opts six" id="modeOpts">
+      <button class="opt sel" data-mode="classic"><div class="t">经典</div><div class="d">自由对局</div></button>
+      <button class="opt" data-mode="time"><div class="t">限时</div><div class="d">每步倒计时</div></button>
+      <button class="opt" data-mode="ladder"><div class="t">等级</div><div class="d">胜局定级</div></button>
+      <button class="opt" data-mode="handicap"><div class="t">让子</div><div class="d">AI 让车马</div></button>
+      <button class="opt" data-mode="drill"><div class="t" style="color:#ffce6a">训练闯关</div><div class="d">连将杀 / 古谱残局 · 91 关</div></button>
+    </div>
+    <div class="opt-label" id="limitLabel" style="display:none">每步限时</div>
+    <div class="opts four" id="limitOpts" style="display:none">
+      <button class="opt" data-limit="10"><div class="t">10s</div><div class="d">快棋</div></button>
+      <button class="opt" data-limit="20"><div class="t">20s</div><div class="d">紧凑</div></button>
+      <button class="opt sel" data-limit="30"><div class="t">30s</div><div class="d">标准</div></button>
+      <button class="opt" data-limit="60"><div class="t">60s</div><div class="d">宽松</div></button>
+    </div>
+    <div class="opt-label" id="mateLabel" style="display:none">训练闯关 · 选关（★ 为已通关）</div>
+    <div class="mate-tabs" id="mateTabs" style="display:none"></div>
+    <div class="opts three" id="mateOpts" style="display:none"></div>
+    <div class="intro" id="mateIntro" style="display:none"></div>
+    <div class="opt-label" id="handicapLabel" style="display:none">让子方案</div>
+    <div class="opts four" id="handicapOpts" style="display:none"></div>
+    <div class="ladder-info" id="ladderInfo" style="display:none"></div>
+    <div class="opt-label" id="levelLabel">AI 棋力</div>
+    <div class="opts" id="levelOpts"></div>
+    <div class="opt-label" id="sideLabel">执子</div>
+    <div class="opts two" id="sideOpts">
+      <button class="opt sel" data-side="0"><div class="t" style="color:#ff8b98">执红先行</div><div class="d">你先落子</div></button>
+      <button class="opt" data-side="1"><div class="t" style="color:#9df0ff">执黑后行</div><div class="d">AI 先落子</div></button>
+    </div>
+    <button class="start-btn" id="btnStart">开 始 对 局</button>
+    <div class="tips">完整象棋规则 · 蹩马腿 / 塞象眼 / 炮打隔子 / 将帅不可照面<br>困毙判负 · 长捉不变作和</div>
+  </div>
+</div>
+
+<div class="modal" id="overModal">
+  <div class="card">
+    <div class="result-title" id="resultTitle">胜</div>
+    <div class="result-reason" id="resultReason"></div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="stMoves">0</div><div class="k">回合</div></div>
+      <div class="stat"><div class="v" id="stCaps">0</div><div class="k">吃子</div></div>
+      <div class="stat"><div class="v" id="stTime">0:00</div><div class="k">用时</div></div>
+    </div>
+    <div class="row2">
+      <button class="ghost-btn" id="btnReview">查看棋盘</button>
+      <button class="solid-btn" id="btnAgain">再来一局</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="settingsModal">
+  <div class="card">
+    <h2>设 置</h2>
+    <div class="sub">皮肤主题 · 背景音乐 · 音效</div>
+    <div class="opt-label">棋盘皮肤</div>
+    <div class="opts five" id="themeOpts"></div>
+    <div class="opt-label">背景音乐风格</div>
+    <div class="opts five" id="bgmStyleOpts"></div>
+    <div class="set-file">
+      <button class="ghost-btn" id="btnBgmFile">选择音乐文件…</button>
+      <span id="bgmFileName">支持 mp3 / ogg / wav 等本地音频</span>
+      <input type="file" id="bgmFile" accept="audio/*" style="display:none">
+    </div>
+    <div class="slider-row"><span>速度</span><input type="range" id="bgmTempo" min="60" max="180" step="1"><b id="bgmTempoVal">107 BPM</b></div>
+    <div class="slider-row"><span>音乐音量</span><input type="range" id="bgmVol" min="0" max="100" step="1"><b id="bgmVolVal">60%</b></div>
+    <div class="slider-row"><span>音效音量</span><input type="range" id="sfxVol" min="0" max="100" step="1"><b id="sfxVolVal">80%</b></div>
+    <button class="start-btn" id="btnSetClose">完 成</button>
+    <div class="tips">自定义音乐仅本次会话有效 · 其余设置自动保存</div>
+  </div>
+</div>
+
+<div class="modal" id="mateModal">
+  <div class="card">
+    <div class="mate-banner" id="mateModalTag" style="display:block;width:max-content;margin:0 auto 10px">经典杀招</div>
+    <h2 id="mateModalTitle">杀 招 达 成</h2>
+    <div class="sub" id="mateModalSub"></div>
+    <div class="mate-stars" id="mateStars">★★★</div>
+    <div class="intro" id="mateModalNote" style="margin-top:10px"></div>
+    <div class="mate-stats">
+      <div class="stat"><div class="v" id="mateStTime">0:00</div><div class="k">用时</div></div>
+      <div class="stat"><div class="v" id="mateStErr">0</div><div class="k">错着</div></div>
+      <div class="stat"><div class="v" id="mateStHint">0</div><div class="k">提示</div></div>
+    </div>
+    <div class="mate-btns">
+      <button id="btnMateAgain">重练本关</button>
+      <button id="btnMateNext" class="primary">下一关</button>
+      <button id="btnMateClose">返回选关</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================ 引擎 ============================ */
+function createEngine(){
+  const RED=0,BLACK=1;
+  const KING=1,ADVISOR=2,ELEPHANT=3,HORSE=4,ROOK=5,CANNON=6,PAWN=7;
+  const VAL=[0,100000,200,200,400,900,450,100];
+  const MATE=1000000,INF=2000000;
+  const sideOf=p=>p>8?1:0;
+  const typeOf=p=>p>8?p-8:p;
+  const rowOf=i=>(i/9)|0,colOf=i=>i%9;
+  const inB=(r,c)=>r>=0&&r<10&&c>=0&&c<9;
+
+  const PST=[
+    null,
+    /* KING */[
+      0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0, 0,0,0,1,1,1,0,0,0, 0,0,0,5,5,5,0,0,0,
+      0,0,0,10,15,10,0,0,0],
+    /* ADVISOR */[
+      0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0, 0,0,0,3,0,3,0,0,0, 0,0,0,0,8,0,0,0,0,
+      0,0,0,3,0,3,0,0,0],
+    /* ELEPHANT */[
+      0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0, 0,0,5,0,0,0,5,0,0,
+      0,0,0,0,0,0,0,0,0, 0,0,0,0,8,0,0,0,0, 0,0,0,0,0,0,0,0,0,
+      0,0,5,0,0,0,5,0,0],
+    /* HORSE */[
+      0,-10,0,10,15,10,0,-10,0, 0,5,10,20,25,20,10,5,0, 5,10,20,30,30,30,20,10,5,
+      0,10,20,25,30,25,20,10,0, 0,5,15,20,25,20,15,5,0, 0,0,10,15,15,15,10,0,0,
+      0,5,10,10,10,10,10,5,0, 0,0,5,5,5,5,5,0,0, 0,0,0,0,0,0,0,0,0,
+      0,-5,0,0,0,0,0,-5,0],
+    /* ROOK */[
+      10,15,20,25,25,25,20,15,10, 10,15,20,25,25,25,20,15,10, 10,15,20,25,25,25,20,15,10,
+      10,15,20,25,25,25,20,15,10, 15,20,25,30,30,30,25,20,15, 15,20,25,30,30,30,25,20,15,
+      15,20,25,30,30,30,25,20,15, 10,15,20,25,25,25,20,15,10, 10,15,20,25,25,25,20,15,10,
+      5,10,15,20,20,20,15,10,5],
+    /* CANNON */[
+      0,0,5,10,10,10,5,0,0, 0,0,5,10,15,10,5,0,0, 5,10,20,25,25,25,20,10,5,
+      0,5,10,15,15,15,10,5,0, 0,0,5,10,10,10,5,0,0, 0,0,0,5,5,5,0,0,0,
+      0,0,5,10,10,10,5,0,0, 5,10,15,20,20,20,15,10,5, 0,0,5,10,10,10,5,0,0,
+      0,0,0,5,10,5,0,0,0],
+    /* PAWN */[
+      10,10,10,20,25,20,10,10,10, 60,70,80,90,100,90,80,70,60, 60,70,80,90,90,90,80,70,60,
+      50,60,70,80,80,80,70,60,50, 30,40,50,60,60,60,50,40,30, 10,10,20,30,30,30,20,10,10,
+      0,0,0,5,5,5,0,0,0, 0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,
+      0,0,0,0,0,0,0,0,0]
+  ];
+
+  const Z=[];for(let i=0;i<16*90;i++)Z.push((Math.random()*4294967296)>>>0);
+  const ZSIDE=(Math.random()*4294967296)>>>0;
+  function hashBoard(b,side){let h=0;for(let i=0;i<90;i++){const p=b[i];if(p)h^=Z[p*90+i];}if(side===BLACK)h^=ZSIDE;return h>>>0;}
+
+  function initial(){
+    const b=new Array(90).fill(0);
+    const back=[ROOK,HORSE,ELEPHANT,ADVISOR,KING,ADVISOR,ELEPHANT,HORSE,ROOK];
+    for(let c=0;c<9;c++){b[c]=back[c]+8;b[81+c]=back[c];}
+    b[19]=CANNON+8;b[25]=CANNON+8;b[64]=CANNON;b[70]=CANNON;
+    for(let c=0;c<9;c+=2){b[27+c]=PAWN+8;b[54+c]=PAWN;}
+    return b;
+  }
+
+  const ORTH=[[1,0],[-1,0],[0,1],[0,-1]];
+  const DIAG=[[1,1],[1,-1],[-1,1],[-1,-1]];
+  const HSTEP=[[-2,-1,-1,0],[-2,1,-1,0],[2,-1,1,0],[2,1,1,0],[-1,-2,0,-1],[1,-2,0,-1],[-1,2,0,1],[1,2,0,1]];
+
+  function findKing(b,side){
+    const k=side===BLACK?KING+8:KING;
+    const r0=side===RED?7:0,r1=side===RED?9:2;
+    for(let r=r0;r<=r1;r++)for(let c=3;c<=5;c++)if(b[r*9+c]===k)return r*9+c;
+    for(let i=0;i<90;i++)if(b[i]===k)return i;
+    return -1;
+  }
+
+  function genMoves(b,side,capsOnly){
+    const out=[];
+    for(let from=0;from<90;from++){
+      const p=b[from];if(!p||sideOf(p)!==side)continue;
+      const t=typeOf(p),r=rowOf(from),c=colOf(from);
+      const add=(nr,nc)=>{
+        if(!inB(nr,nc))return;
+        const to=nr*9+nc,q=b[to];
+        if(q&&sideOf(q)===side)return;
+        if(capsOnly&&!q)return;
+        out.push(from*90+to);
+      };
+      if(t===KING){
+        const r0=side===RED?7:0,r1=side===RED?9:2;
+        for(const d of ORTH){const nr=r+d[0],nc=c+d[1];if(nr>=r0&&nr<=r1&&nc>=3&&nc<=5)add(nr,nc);}
+        const dir=side===RED?-1:1;let nr=r+dir;
+        while(nr>=0&&nr<10){const q=b[nr*9+c];if(q){if(typeOf(q)===KING)add(nr,c);break;}nr+=dir;}
+      }else if(t===ADVISOR){
+        const r0=side===RED?7:0,r1=side===RED?9:2;
+        for(const d of DIAG){const nr=r+d[0],nc=c+d[1];if(nr>=r0&&nr<=r1&&nc>=3&&nc<=5)add(nr,nc);}
+      }else if(t===ELEPHANT){
+        for(const d of DIAG){
+          const nr=r+d[0]*2,nc=c+d[1]*2;
+          if(!inB(nr,nc))continue;
+          if(side===RED?nr<5:nr>4)continue;
+          if(b[(r+d[0])*9+(c+d[1])])continue;
+          add(nr,nc);
+        }
+      }else if(t===HORSE){
+        for(const d of HSTEP){
+          const nr=r+d[0],nc=c+d[1];
+          if(!inB(nr,nc))continue;
+          if(b[(r+d[2])*9+(c+d[3])])continue;
+          add(nr,nc);
+        }
+      }else if(t===ROOK){
+        for(const d of ORTH){
+          let nr=r+d[0],nc=c+d[1];
+          while(inB(nr,nc)){const q=b[nr*9+nc];if(!q){add(nr,nc);}else{if(sideOf(q)!==side)add(nr,nc);break;}nr+=d[0];nc+=d[1];}
+        }
+      }else if(t===CANNON){
+        for(const d of ORTH){
+          let nr=r+d[0],nc=c+d[1],jump=false;
+          while(inB(nr,nc)){
+            const q=b[nr*9+nc];
+            if(!jump){if(!q){if(!capsOnly)out.push(from*90+(nr*9+nc));}else jump=true;}
+            else if(q){if(sideOf(q)!==side)out.push(from*90+(nr*9+nc));break;}
+            nr+=d[0];nc+=d[1];
+          }
+        }
+      }else if(t===PAWN){
+        const dir=side===RED?-1:1;
+        add(r+dir,c);
+        if(side===RED?r<=4:r>=5){add(r,c-1);add(r,c+1);}
+      }
+    }
+    return out;
+  }
+
+  function isInCheck(b,side){
+    const k=findKing(b,side);if(k<0)return true;
+    const r=rowOf(k),c=colOf(k),opp=1-side;
+    for(const d of ORTH){
+      let nr=r+d[0],nc=c+d[1],screen=false;
+      while(inB(nr,nc)){
+        const q=b[nr*9+nc];
+        if(q){
+          if(!screen){
+            if(sideOf(q)===opp){const t=typeOf(q);if(t===ROOK||t===KING)return true;}
+            screen=true;
+          }else{
+            if(sideOf(q)===opp&&typeOf(q)===CANNON)return true;
+            break;
+          }
+        }
+        nr+=d[0];nc+=d[1];
+      }
+    }
+    const pdir=opp===RED?-1:1,pr=r-pdir;
+    if(inB(pr,c)){const q=b[pr*9+c];if(q&&sideOf(q)===opp&&typeOf(q)===PAWN)return true;}
+    if(opp===RED?r<=4:r>=5){
+      for(const dc of[-1,1]){const nc=c+dc;if(inB(r,nc)){const q=b[r*9+nc];if(q&&sideOf(q)===opp&&typeOf(q)===PAWN)return true;}}
+    }
+    for(const d of HSTEP){
+      const hr=r+d[0],hc=c+d[1];
+      if(!inB(hr,hc))continue;
+      const q=b[hr*9+hc];
+      if(!q||sideOf(q)!==opp||typeOf(q)!==HORSE)continue;
+      const lr=Math.abs(d[0])===2?r+d[0]/2:hr;
+      const lc=Math.abs(d[0])===2?hc:hc-d[1]/2;
+      if(!b[lr*9+lc])return true;
+    }
+    return false;
+  }
+
+  function doMove(b,m){const from=(m/90)|0,to=m%90,cap=b[to];b[to]=b[from];b[from]=0;return cap;}
+  function unMove(b,m,cap){const from=(m/90)|0,to=m%90;b[from]=b[to];b[to]=cap;}
+
+  function legalMoves(b,side){
+    const ms=genMoves(b,side,false),out=[];
+    for(let i=0;i<ms.length;i++){
+      const m=ms[i],cap=doMove(b,m);
+      if(!isInCheck(b,side))out.push(m);
+      unMove(b,m,cap);
+    }
+    return out;
+  }
+
+  function evaluate(b){
+    let s=0;
+    for(let i=0;i<90;i++){
+      const p=b[i];if(!p)continue;
+      const sd=sideOf(p),t=typeOf(p);
+      const pos=sd===RED?i:(9-rowOf(i))*9+colOf(i);
+      const v=VAL[t]+PST[t][pos];
+      s+=sd===RED?v:-v;
+    }
+    return s;
+  }
+
+  let nodes=0,deadline=0,stopped=false,path=[],killers=[];
+  const sign=side=>side===RED?1:-1;
+
+  function order(b,ms,ply){
+    const k=killers[ply];
+    const sc=new Array(ms.length);
+    for(let i=0;i<ms.length;i++){
+      const m=ms[i],to=m%90,from=(m/90)|0,q=b[to];
+      let v=0;
+      if(q)v=1000000+VAL[typeOf(q)]*16-VAL[typeOf(b[from])];
+      else if(k&&k[0]===m)v=900000;
+      else if(k&&k[1]===m)v=800000;
+      sc[i]=v;
+    }
+    for(let i=1;i<ms.length;i++){
+      const m=ms[i],v=sc[i];let j=i-1;
+      while(j>=0&&sc[j]<v){ms[j+1]=ms[j];sc[j+1]=sc[j];j--;}
+      ms[j+1]=m;sc[j+1]=v;
+    }
+  }
+
+  function tick(){if((nodes&1023)===0&&Date.now()>deadline)stopped=true;return stopped;}
+
+  function quiesce(b,side,alpha,beta,ply,qleft,h){
+    nodes++;if(tick())return 0;
+    if(path.indexOf(h)>=0)return 0;
+    const chk=isInCheck(b,side);
+    if(!chk){
+      const stand=sign(side)*evaluate(b);
+      if(stand>=beta)return stand;
+      if(stand>alpha)alpha=stand;
+      if(qleft<=0)return alpha;
+    }else if(qleft<=0)return sign(side)*evaluate(b)-50;
+    path.push(h);
+    const ms=genMoves(b,side,!chk);order(b,ms,ply);
+    let legal=0,best=-INF;
+    for(let i=0;i<ms.length;i++){
+      const m=ms[i],from=(m/90)|0,to=m%90,piece=b[from],cap=b[to];
+      const nh=(h^Z[piece*90+from]^Z[piece*90+to]^(cap?Z[cap*90+to]:0)^ZSIDE)>>>0;
+      b[to]=piece;b[from]=0;
+      if(isInCheck(b,side)){b[from]=piece;b[to]=cap;continue;}
+      legal++;
+      const sc=-quiesce(b,1-side,-beta,-alpha,ply+1,qleft-1,nh);
+      b[from]=piece;b[to]=cap;
+      if(stopped){path.pop();return 0;}
+      if(sc>best)best=sc;
+      if(sc>alpha)alpha=sc;
+      if(alpha>=beta)break;
+    }
+    path.pop();
+    if(legal===0)return chk?-MATE+ply:alpha;
+    return best;
+  }
+
+  function alphabeta(b,side,depth,alpha,beta,ply,h){
+    if(stopped)return 0;
+    nodes++;if(tick())return 0;
+    if(path.indexOf(h)>=0)return 0;
+    const chk=isInCheck(b,side);
+    if(chk&&ply<14)depth++;
+    if(depth<=0)return quiesce(b,side,alpha,beta,ply,10,h);
+    path.push(h);
+    const ms=genMoves(b,side,false);order(b,ms,ply);
+    let legal=0,best=-INF;
+    for(let i=0;i<ms.length;i++){
+      const m=ms[i],from=(m/90)|0,to=m%90,piece=b[from],cap=b[to];
+      const nh=(h^Z[piece*90+from]^Z[piece*90+to]^(cap?Z[cap*90+to]:0)^ZSIDE)>>>0;
+      b[to]=piece;b[from]=0;
+      if(isInCheck(b,side)){b[from]=piece;b[to]=cap;continue;}
+      legal++;
+      const sc=-alphabeta(b,1-side,depth-1,-beta,-alpha,ply+1,nh);
+      b[from]=piece;b[to]=cap;
+      if(stopped){path.pop();return 0;}
+      if(sc>best)best=sc;
+      if(sc>alpha){
+        alpha=sc;
+        if(alpha>=beta){
+          if(!cap){const k=killers[ply]||(killers[ply]=[0,0]);if(k[0]!==m){k[1]=k[0];k[0]=m;}}
+          break;
+        }
+      }
+    }
+    path.pop();
+    if(legal===0)return -MATE+ply;
+    return best;
+  }
+
+  function search(board,side,opts){
+    const maxDepth=opts.maxDepth||4,timeMs=opts.timeMs||1000,jitter=opts.jitter||0;
+    const hist=opts.history||[],onInfo=opts.onInfo||null;
+    const b=board.slice();
+    const t0=Date.now();nodes=0;stopped=false;deadline=t0+timeMs;path=[];killers=[];
+    const rootMoves=legalMoves(b,side);
+    if(rootMoves.length===0)return{move:-1,score:-MATE,depth:0,nodes:0,time:0};
+    const rootHash=hashBoard(b,side);
+    const cnt=new Map();for(const h of hist)cnt.set(h,(cnt.get(h)||0)+1);
+    let bestMove=rootMoves[0],bestScore=0,done=0,prev=new Map();
+    for(let d=1;d<=maxDepth;d++){
+      path=[];
+      rootMoves.sort((a,c)=>(prev.has(c)?prev.get(c):-INF)-(prev.has(a)?prev.get(a):-INF));
+      let alpha=-INF,lb=-1,ls=-INF;const scores=new Map();
+      for(let i=0;i<rootMoves.length;i++){
+        const m=rootMoves[i],from=(m/90)|0,to=m%90,piece=b[from],cap=b[to];
+        const nh=(rootHash^Z[piece*90+from]^Z[piece*90+to]^(cap?Z[cap*90+to]:0)^ZSIDE)>>>0;
+        b[to]=piece;b[from]=0;
+        let sc;
+        if(jitter>0)sc=-alphabeta(b,1-side,d-1,-INF,INF,1,nh);
+        else sc=-alphabeta(b,1-side,d-1,-INF,-alpha,1,nh);
+        b[from]=piece;b[to]=cap;
+        if(stopped)break;
+        const rep=cnt.get(nh)||0;
+        if(rep>0)sc-=40*rep;
+        if(jitter>0)sc+=(Math.random()*2-1)*jitter;
+        scores.set(m,sc);
+        if(sc>ls){ls=sc;lb=m;}
+        if(sc>alpha)alpha=sc;
+      }
+      if(lb>=0){bestMove=lb;bestScore=ls;done=d;prev=scores;}
+      if(onInfo)onInfo({depth:d,score:bestScore,nodes:nodes,time:Date.now()-t0});
+      if(stopped||Date.now()>deadline)break;
+      if(Math.abs(bestScore)>MATE-1000)break;
+    }
+    return{move:bestMove,score:bestScore,depth:done,nodes:nodes,time:Date.now()-t0};
+  }
+
+  return{RED,BLACK,KING,ADVISOR,ELEPHANT,HORSE,ROOK,CANNON,PAWN,VAL,MATE,
+    sideOf,typeOf,rowOf,colOf,initial,genMoves,legalMoves,isInCheck,findKing,
+    doMove,unMove,evaluate,hashBoard,search};
+}
+
+/* ============================ 主程序 ============================ */
+const E=createEngine();
+const RED=E.RED,BLACK=E.BLACK;
+const CHARS=[['','帅','仕','相','马','车','炮','兵'],['','将','士','象','马','车','炮','卒']];
+const CNUM=['','一','二','三','四','五','六','七','八','九'];
+const LEVELS=[
+  {name:'新手',desc:'轻松上手',depth:2,time:400,jitter:40},
+  {name:'业余',desc:'有来有回',depth:3,time:900,jitter:14},
+  {name:'专业',desc:'棋力不俗',depth:4,time:1800,jitter:0},
+  {name:'大师',desc:'全力应战',depth:6,time:3600,jitter:0}
+];
+
+const LADDER=[
+  {name:'入门',lv:0},{name:'初窥',lv:0},{name:'业余',lv:1},{name:'进阶',lv:1},
+  {name:'专业',lv:2},{name:'精英',lv:2},{name:'大师',lv:3},{name:'棋圣',lv:3}
+];
+const THEMES=[
+ {id:'neon',name:'霓虹',bg:['#101a2e','#0a1120','#070d18'],glow:'rgba(60,140,220,.10)',frame:'rgba(120,200,255,.30)',frameGlow:'rgba(60,180,255,.55)',grid:'rgba(140,210,255,.34)',gridGlow:'rgba(70,190,255,.4)',palace:'rgba(255,206,106,.34)',mark:'rgba(140,210,255,.42)',river:'rgba(150,215,255,.34)',labelR:'rgba(255,140,155,.5)',labelB:'rgba(130,220,255,.45)',
+  red:{g:['#7d1f2c','#3a0d16','#1a0509'],ring:'rgba(255,105,125,.95)',inner:'rgba(255,160,175,.42)',txt:'#ffe6ea',glow:'#ff3b52',txtGlow:'rgba(255,70,100,.95)'},
+  blk:{g:['#1b5570','#0b2233','#04101a'],ring:'rgba(85,228,255,.95)',inner:'rgba(150,240,255,.38)',txt:'#e2f9ff',glow:'#22d3ee',txtGlow:'rgba(50,215,255,.95)'}},
+ {id:'wood',name:'古典木',bg:['#3a2417','#2a1a10','#1d120a'],glow:'rgba(255,190,120,.10)',frame:'rgba(230,180,120,.4)',frameGlow:'rgba(255,190,120,.4)',grid:'rgba(240,200,150,.4)',gridGlow:'rgba(255,200,140,.3)',palace:'rgba(255,220,160,.4)',mark:'rgba(240,200,150,.45)',river:'rgba(250,220,170,.4)',labelR:'rgba(255,150,140,.55)',labelB:'rgba(220,200,170,.5)',
+  red:{g:['#8d2a2a','#5a1616','#300a0a'],ring:'rgba(255,140,120,.95)',inner:'rgba(255,180,160,.4)',txt:'#ffe9dc',glow:'#ff5a3c',txtGlow:'rgba(255,90,60,.9)'},
+  blk:{g:['#3a3a3a','#222222','#111111'],ring:'rgba(220,220,220,.9)',inner:'rgba(255,255,255,.3)',txt:'#f0f0f0',glow:'#cccccc',txtGlow:'rgba(255,255,255,.7)'}},
+ {id:'ink',name:'水墨',bg:['#f9f6ef','#efe9dd','#e2dac9'],glow:'rgba(0,0,0,.05)',frame:'rgba(60,60,60,.5)',frameGlow:'rgba(0,0,0,.2)',grid:'rgba(70,70,70,.5)',gridGlow:'rgba(0,0,0,.15)',palace:'rgba(90,90,90,.5)',mark:'rgba(70,70,70,.5)',river:'rgba(80,80,80,.5)',labelR:'rgba(180,60,60,.6)',labelB:'rgba(60,60,60,.6)',
+  red:{g:['#c0392b','#96281b','#6b1a10'],ring:'rgba(192,57,43,.95)',inner:'rgba(255,255,255,.35)',txt:'#fff5f0',glow:'#c0392b',txtGlow:'rgba(192,57,43,.6)'},
+  blk:{g:['#2c3e50','#1a2530','#0d141b'],ring:'rgba(44,62,80,.95)',inner:'rgba(255,255,255,.3)',txt:'#ecf0f1',glow:'#2c3e50',txtGlow:'rgba(44,62,80,.6)'}},
+ {id:'jade',name:'翡翠',bg:['#0e2b22','#0a2019','#061711'],glow:'rgba(60,255,170,.08)',frame:'rgba(80,255,180,.35)',frameGlow:'rgba(60,255,170,.4)',grid:'rgba(120,255,200,.35)',gridGlow:'rgba(60,255,170,.3)',palace:'rgba(255,220,120,.35)',mark:'rgba(120,255,200,.4)',river:'rgba(150,255,210,.35)',labelR:'rgba(255,150,160,.5)',labelB:'rgba(140,255,210,.5)',
+  red:{g:['#7d1f3c','#3a0d1e','#1a050f'],ring:'rgba(255,105,160,.95)',inner:'rgba(255,160,200,.4)',txt:'#ffe6f0',glow:'#ff3b78',txtGlow:'rgba(255,60,120,.9)'},
+  blk:{g:['#1b7050','#0b3325','#041a12'],ring:'rgba(85,255,180,.95)',inner:'rgba(150,255,220,.38)',txt:'#e2fff2',glow:'#22ee99',txtGlow:'rgba(50,230,150,.9)'}},
+ {id:'gold',name:'熔金',bg:['#2b2008','#201705','#171003'],glow:'rgba(255,200,80,.10)',frame:'rgba(255,210,120,.4)',frameGlow:'rgba(255,200,80,.45)',grid:'rgba(255,220,150,.35)',gridGlow:'rgba(255,200,80,.3)',palace:'rgba(255,240,180,.4)',mark:'rgba(255,220,150,.4)',river:'rgba(255,230,170,.4)',labelR:'rgba(255,160,140,.55)',labelB:'rgba(255,220,150,.5)',
+  red:{g:['#8d3a1a','#5a2210','#301206'],ring:'rgba(255,160,90,.95)',inner:'rgba(255,200,150,.4)',txt:'#fff0dc',glow:'#ff7a3c',txtGlow:'rgba(255,120,60,.9)'},
+  blk:{g:['#6b5a1a','#40350d','#241d05'],ring:'rgba(255,220,120,.95)',inner:'rgba(255,240,180,.4)',txt:'#fff8dc',glow:'#ffce6a',txtGlow:'rgba(255,206,106,.9)'}}
+];
+const theme=()=>THEMES.find(t=>t.id===G.theme)||THEMES[0];
+const PUZZLES=[
+ {name:'单车破士',desc:'一车巧胜双士',lv:0,moves:20,goal:'win',pieces:[[84,1],[48,5],[4,9],[3,10],[5,10]],
+  from:'象棋基础残局定式（单车例胜双士）',
+  lore:'车方只需帅占中、车控将门即可破士，是入门第一道必残定式。黑双士无法互保，稍有移动即被抽吃。',
+  idea:'先用帅牵制中士，再以车逼将位，待士走成“羊角士”后用车吃士成杀。'},
+ {name:'双炮临门',desc:'重炮伺机破门',lv:0,moves:25,goal:'win',pieces:[[86,1],[31,6],[57,6],[4,9],[3,10],[5,10]],
+  from:'象棋基础杀法练习（双炮叠线）',
+  lore:'双炮同线时，一炮为架、一炮发力，中路与肋道同时受攻，是练习“炮需隔子打”的典型局面。',
+  idea:'先把炮调到有子可作炮架的线上，切勿双炮重叠而前方无架。'},
+ {name:'马炮争雄',desc:'马炮联攻入局',lv:1,moves:30,goal:'win',pieces:[[84,1],[40,4],[36,6],[4,9],[3,10]],
+  from:'象棋中残局练习（马炮配合）',
+  lore:'马走日、炮隔打，二者同线配合即为“马后炮”雏形；黑缺象，最怕马踹中象位置。',
+  idea:'注意蹩马腿与炮架变化，先以炮控制将门，再放马卧槽或挂角。'},
+ {name:'七星聚会',desc:'四大名局 · 守满 24 步',lv:2,moves:24,goal:'hold',
+  pieces:[[4,13],[5,9],[12,7],[22,11],[23,7],[53,7],[64,15],[67,15],[70,6],[75,15],[77,15],[85,1],[87,5],[88,5]],
+  from:'《百局象棋谱》卷首第一局 · “江湖四大名局”之首（《渊深海阔》第16局等亦载）',
+  lore:'红黑各七子，形如北斗七星，故以为名。双车炮兵对车象四卒，变化精微深邃，历代棋谱反复订正，被推为“残局之王”。正解为和局，红先黑亦和，一着贪杀便倾覆。',
+  idea:'要点：红不可图侥幸连杀，宜以车兑卒、稳住七路；黑靠车守肋、卒逼宫来回牵制。守住 24 步即等于古谱“正变和”的结论。'},
+ {name:'野马操田',desc:'四大名局 · 守满 24 步',lv:2,moves:24,goal:'hold',
+  pieces:[[2,11],[3,10],[4,9],[13,10],[22,11],[42,4],[43,5],[44,5],[47,3],[55,13],[56,7],[58,7],[66,15],[67,3],[76,15],[84,1]],
+  from:'江湖四大名局之一 · 又名“野马躁田”“大车马”“管鲍分金”，最早见《蕉窗逸品》(1879)，《百局象棋谱》第11局、《渊深海阔》第107局',
+  lore:'红以双车单马盘旋突击，表面处处连杀，实则黑有解着，是车马斗车卒的深算名局。全局变化长达数百着，最考验临算与收势。',
+  idea:'要点：识破“连杀假象”，黑退车护肋时立即收势兑子，宁可弃兵求和，莫恋战失帅。'},
+ {name:'蚯蚓降龙',desc:'四大名局 · 守满 20 步',lv:2,moves:20,goal:'hold',
+  pieces:[[3,10],[4,9],[13,10],[22,11],[38,15],[50,5],[53,7],[76,15],[78,15],[86,1],[89,5]],
+  from:'江湖四大名局之一 · 又名“尺蚓降龙”“诡越阴平”“绣球象”，《百局象棋谱》第8局、《心武残编》第69局、《竹香斋》三集第35局',
+  lore:'红双车一兵看似蛟龙得势，却被黑三卒如蚯蚓般层层牵制，反遭困锁，故名“蚯蚓降龙”。古谱以“纷和”论结，正变为和棋。',
+  idea:'要点：红车忌贪攻轻进，用车盯卒、以兵换卒；黑则三卒联防、不可轻进孤卒。守住 20 步即为和局。'},
+ {name:'千里独行',desc:'四大名局 · 守满 20 步',lv:2,moves:20,goal:'hold',
+  pieces:[[4,9],[21,10],[22,7],[26,11],[27,15],[51,12],[56,7],[60,15],[67,5],[75,15],[77,15],[85,1]],
+  from:'《竹香斋象戏谱》本 · 江湖四大名局之一，又名“独行千里”“策杖独行”“单枪赵云”',
+  lore:'红以一车转战千里，独对黑马四卒，结尾一车大战多卒，是全谱中最见车功的一局。古人以“纷和”论结；若按现行“一杀一捉”循环棋规，黑方占优，故本局作守和挑战。',
+  idea:'要点：车占中路与要道，以捉制卒、以兑减压，防黑马借卒做杀；熬过 20 步即为成功。'}
+];
+
+/* ==================== 经典杀招训练 · 关卡 ====================
+   每一局都由引擎验证为「steps 步强制连将杀」：红方每手照将，黑方所有应手均被覆盖。
+   玩家任意能保持连杀的着法都算正解，黑方自动选择最顽强的应手。 */
+const MATE_LESSONS=[
+ /* 一步成杀 · 第 1 关 */
+ {name:"双车错",chapter:"一步成杀",steps:1,pieces:[[4,9],[5,10],[13,10],[33,12],[39,5],[48,5],[85,1]],key:"前车进四",
+  from:"象棋基本杀法 · 双车错",
+  lore:"两车分占两线、交替照将，黑将左右均无立足之地。后车护住前车，前车沉底一击致命，是最基础的车类杀法。",
+  idea:"要点：沉底将军时前车必须受后车保护，否则将被将吃掉；先把将逼回原位再动刀。"},
+ /* 一步成杀 · 第 2 关 */
+ {name:"重炮",chapter:"一步成杀",steps:1,pieces:[[3,10],[4,9],[5,10],[31,6],[51,12],[18,6],[84,1]],key:"炮九平五",
+  from:"象棋基本杀法 · 重炮（双炮叠线）",
+  lore:"两炮同线，一炮作架、一炮发力。将既不能吃炮，也无路可逃，是\"炮须隔子打\"最直观的一课。",
+  idea:"要点：把移动的那门炮落到另一门炮前面，两炮互封，中路即刻成杀。"},
+ /* 一步成杀 · 第 3 关 */
+ {name:"马后炮",chapter:"一步成杀",steps:1,pieces:[[4,9],[5,10],[13,10],[33,12],[38,4],[39,6],[85,1]],key:"马七进六",
+  from:"象棋基本杀法 · 马后炮",
+  lore:"马与炮同处一线：马负责照将，炮负责封住将的退路。二者缺一，此杀不成。",
+  idea:"要点：跳马前先看马腿是否被蹩，再确认炮已压住将门。"},
+ /* 一步成杀 · 第 4 关 */
+ {name:"卧槽马",chapter:"一步成杀",steps:1,pieces:[[3,10],[4,9],[5,10],[13,10],[33,12],[38,4],[40,5],[84,1]],key:"马七进六",
+  from:"象棋基本杀法 · 卧槽马",
+  lore:"马跳到对方底象前一格（卧槽）照将，配合车占中线锁住士口，将上下不能、左右不通。",
+  idea:"要点：马踹卧槽一将，车占中线封住将的横向出路。"},
+ /* 一步成杀 · 第 5 关 */
+ {name:"铁门栓",chapter:"一步成杀",steps:1,pieces:[[3,10],[4,9],[13,10],[26,6],[42,5],[56,12],[85,1]],key:"车三进四",
+  from:"象棋基本杀法 · 铁门栓",
+  lore:"车炮同侧锁宫：炮先封住将门与士的斜线，车再沿空档沉底照将。此局为「铁门栓」的变式，破防思路一脉相承。",
+  idea:"要点：先确认炮已封死退路、黑士无法垫将，再沉车——无需另算别的变化。"},
+ /* 一步成杀 · 第 6 关 */
+ {name:"双马饮泉",chapter:"一步成杀",steps:1,pieces:[[3,10],[4,9],[13,10],[18,4],[24,4],[40,12],[85,1]],key:"马九进七",
+  from:"象棋基本杀法 · 双马饮泉",
+  lore:"双马盘环，一马照将、一马补位，两马互为犄角，将的每个出口都被马步接管。",
+  idea:"要点：跳马将军前，先确认另一匹马已封住所有出口。"},
+ /* 一步成杀 · 第 7 关 */
+ {name:"车马绝杀",chapter:"一步成杀",steps:1,pieces:[[4,9],[5,10],[13,10],[29,12],[39,5],[40,4],[85,1]],key:"马五进四",
+  from:"象棋基本杀法 · 车马冷着",
+  lore:"马借车势、车藏马后：车先控线，马跳照将，将的每条退路都交给车的横线。",
+  idea:"要点：先找到车控制的横线，再让马落到与车互补的点上。"},
+ /* 一步成杀 · 第 8 关 */
+ {name:"双车错·侧翼",chapter:"一步成杀",steps:1,pieces:[[4,9],[12,5],[14,5],[42,11],[48,6],[86,1]],key:"车四进一",
+  from:"原创排局 · 双车错类（引擎验证 1 步强制连将杀）",
+  lore:"双车错的关键在于「错开一线」：一车封锁横线，另一车沿纵线切入，将门即刻落锁。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：先封横线，再沉纵线，次序反了就没有杀。本局有 2 种等效杀着，不必死记提示。"},
+ /* 一步成杀 · 第 9 关 */
+ {name:"马后炮·右肋",chapter:"一步成杀",steps:1,pieces:[[2,4],[3,10],[12,9],[21,10],[24,6],[26,5],[32,15],[46,5],[85,1]],key:"马七退八",
+  from:"原创排局 · 马后炮类（引擎验证 1 步强制连将杀）",
+  lore:"炮不直接将军，却是这盘杀棋的真正主角——它把将的退路全部封死。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：炮先压住将门，马再落照将点。本局有 2 种等效杀着，不必死记提示。"},
+ /* 一步成杀 · 第 10 关 */
+ {name:"车马冷着·左肋",chapter:"一步成杀",steps:1,pieces:[[5,9],[7,4],[12,7],[15,14],[23,10],[26,11],[29,5],[45,4],[85,1]],key:"车七进三",
+  from:"原创排局 · 车马冷着类（引擎验证 1 步强制连将杀）",
+  lore:"马借车势、车藏马后：车先控线，马跳照将，将的每条退路都交给车的横线。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 11 关 */
+ {name:"单车破阵·沉底",chapter:"一步成杀",steps:1,pieces:[[18,11],[21,9],[23,10],[28,5],[85,1]],key:"车八平六",
+  from:"原创排局 · 单车破阵类（引擎验证 1 步强制连将杀）",
+  lore:"单车破阵贵在借势：己方另一子封住退路，车沿空线直插到底即可成杀。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：车的落点要有保护，或黑将根本吃不到。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 12 关 */
+ {name:"车炮合势·贴身",chapter:"一步成杀",steps:1,pieces:[[4,9],[16,4],[27,5],[36,15],[43,6],[84,1]],key:"车九平五",
+  from:"原创排局 · 车炮合势类（引擎验证 1 步强制连将杀）",
+  lore:"车与炮一明一暗，车走明线、炮控暗线，黑方往往只能应出一手。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：确认黑士无法垫将，再沉车。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 13 关 */
+ {name:"重炮·换线",chapter:"一步成杀",steps:1,pieces:[[3,10],[5,9],[13,7],[23,6],[37,6],[42,11],[84,1]],key:"炮八平四",
+  from:"原创排局 · 重炮类（引擎验证 1 步强制连将杀）",
+  lore:"两炮叠于同一线，一炮作架、一炮发力。炮须隔子打，将既不能吃炮，也无处可逃。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：两炮之间必须有一个炮架，且将吃不到前炮。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 14 关 */
+ {name:"单车破阵·截将",chapter:"一步成杀",steps:1,pieces:[[2,11],[3,10],[4,9],[13,15],[41,7],[43,5],[86,1]],key:"车二进四",
+  from:"原创排局 · 单车破阵类（引擎验证 1 步强制连将杀）",
+  lore:"车走直线、控制面大，但必须确认落点有人保护，否则将一吃便前功尽弃。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：把车走到能同时控制横线与纵线的位置。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 15 关 */
+ {name:"双车错·破士",chapter:"一步成杀",steps:1,pieces:[[6,5],[16,5],[21,10],[23,9],[28,14],[29,7],[42,11],[84,1]],key:"车三退二",
+  from:"原创排局 · 双车错类（引擎验证 1 步强制连将杀）",
+  lore:"车类杀法最忌孤军深入。先看清哪辆车已有同伴保护，再让它贴脸照将。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 16 关 */
+ {name:"单车破阵·封门",chapter:"一步成杀",steps:1,pieces:[[3,9],[5,10],[19,7],[26,5],[42,11],[85,1]],key:"车一平六",
+  from:"原创排局 · 单车破阵类（引擎验证 1 步强制连将杀）",
+  lore:"车走直线、控制面大，但必须确认落点有人保护，否则将一吃便前功尽弃。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：把车走到能同时控制横线与纵线的位置。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 17 关 */
+ {name:"双车错·横扫",chapter:"一步成杀",steps:1,pieces:[[2,4],[6,16],[21,5],[22,11],[23,9],[34,6],[38,5],[84,1]],key:"车七平四",
+  from:"原创排局 · 双车错类（引擎验证 1 步强制连将杀）",
+  lore:"双车错的关键在于「错开一线」：一车封锁横线，另一车沿纵线切入，将门即刻落锁。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 18 关 */
+ {name:"双马饮泉·回马",chapter:"一步成杀",steps:1,pieces:[[0,5],[13,10],[22,9],[23,10],[30,4],[36,15],[38,4],[42,11],[86,1]],key:"马六进七",
+  from:"原创排局 · 双马饮泉类（引擎验证 1 步强制连将杀）",
+  lore:"双马饮泉式的杀法讲究「环环相扣」，跳马前先默数黑将的四个斜向出口。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：两马的控制点要互补，别都挤在同一侧。本局有 2 种等效杀着，不必死记提示。"},
+ /* 一步成杀 · 第 19 关 */
+ {name:"双车错·斜封",chapter:"一步成杀",steps:1,pieces:[[14,9],[17,7],[18,11],[20,5],[35,5],[85,1]],key:"车一平四",
+  from:"原创排局 · 双车错类（引擎验证 1 步强制连将杀）",
+  lore:"两车分占纵横两线交替照将，黑将左右都无立足之地；后车护住前车，前车沉底一击致命。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 20 关 */
+ {name:"车炮合势·斜封",chapter:"一步成杀",steps:1,pieces:[[7,5],[15,7],[18,11],[21,10],[23,9],[47,6],[85,1]],key:"车二退二",
+  from:"原创排局 · 车炮合势类（引擎验证 1 步强制连将杀）",
+  lore:"先用炮把士象拴住或把线路封死，再让车沿空档切入，一击中的。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：确认黑士无法垫将，再沉车。本局有 2 种等效杀着，不必死记提示。"},
+ /* 一步成杀 · 第 21 关 */
+ {name:"单马盘将·锁宫",chapter:"一步成杀",steps:1,pieces:[[4,9],[5,10],[13,10],[34,4],[84,1]],key:"马二进三",
+  from:"原创排局 · 单马盘将类（引擎验证 1 步强制连将杀）",
+  lore:"单马盘将要靠其它子力封住所有出口，马只负责最后那一记照将。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：先清马腿，再看谁替马封住了其余出口。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 22 关 */
+ {name:"马后炮·锁宫",chapter:"一步成杀",steps:1,pieces:[[12,5],[19,5],[21,10],[22,11],[23,9],[29,4],[32,12],[35,6],[85,1]],key:"马七退五",
+  from:"原创排局 · 马后炮类（引擎验证 1 步强制连将杀）",
+  lore:"马与炮同处一线：马照将，炮封住退路，二者缺一，马后炮便不成杀。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：算清黑将平出后的两条路是否都被炮封死。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 23 关 */
+ {name:"车炮合势·双解",chapter:"一步成杀",steps:1,pieces:[[8,16],[21,9],[25,6],[27,5],[85,1]],key:"车九平六",
+  from:"原创排局 · 车炮合势类（引擎验证 1 步强制连将杀）",
+  lore:"先用炮把士象拴住或把线路封死，再让车沿空档切入，一击中的。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：炮负责封线，车负责照将，别让两子抢同一条线。本局正解唯一，找到那一将即可。"},
+ /* 一步成杀 · 第 24 关 */
+ {name:"双马饮泉·归边",chapter:"一步成杀",steps:1,pieces:[[3,10],[4,9],[13,10],[18,4],[24,4],[25,12],[85,1]],key:"马九进七",
+  from:"经典杀法变式 · 双马饮泉类（引擎验证 1 步强制连将杀）",
+  lore:"双马饮泉式的杀法讲究「环环相扣」，跳马前先默数黑将的四个斜向出口。这是最短的杀法：先数清黑将的每个出口，一手定胜负。",
+  idea:"要点：两马的控制点要互补，别都挤在同一侧。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 25 关 */
+ {name:"借将封门",chapter:"两步连杀",steps:2,pieces:[[4,9],[5,10],[13,10],[33,12],[38,4],[27,6],[85,1]],key:"马七进六",
+  from:"杀法教学排局 · 由「马后炮」推演（引擎验证强制连杀）",
+  lore:"一步杀不了？先用马把将赶离中线，再把炮平到将门——同一杀法分两口气走完，这就是「连将」的思路。",
+  idea:"要点：第一手必须照将且不能让将逃远；等将平出后，炮贴脸封门即成马后炮。"},
+ /* 两步连杀 · 第 26 关 */
+ {name:"沉炮破士",chapter:"两步连杀",steps:2,pieces:[[3,10],[4,9],[5,10],[12,5],[51,12],[18,6],[84,1]],key:"炮九进二",
+  from:"杀法教学排局 · 由「重炮」推演（引擎验证强制连杀）",
+  lore:"炮沉底照将逼起黑士，中路露出空档，车随即坐穿中心。先破防、再补刀，是重炮类的常用次序。",
+  idea:"要点：注意士被逼起后士角空出，第二手要走的正是这个空档。"},
+ /* 两步连杀 · 第 27 关 */
+ {name:"马后藏车",chapter:"两步连杀",steps:2,pieces:[[4,9],[5,10],[13,10],[12,12],[39,5],[40,4],[85,1]],key:"马五进四",
+  from:"杀法教学排局 · 由「车马绝杀」推演（引擎验证强制连杀）",
+  lore:"马照将时车按兵不动，等将被迫平出，车才沿原线推进——藏而不露，是车马冷着的精髓。",
+  idea:"要点：第一手马要逼将往车的方向走，第二手车才够得着。"},
+ /* 两步连杀 · 第 28 关 */
+ {name:"借士照将",chapter:"两步连杀",steps:2,pieces:[[3,10],[4,9],[13,10],[15,5],[24,4],[40,12],[85,1]],key:"车三进一",
+  from:"杀法教学排局 · 由「双马饮泉」推演（引擎验证强制连杀）",
+  lore:"车先贴身照将，逼黑士回撤让出肋道，再平车关门。次序颠倒就无杀。",
+  idea:"要点：看清黑士唯一应手后会让出哪条线，第二手就走那条线。"},
+ /* 两步连杀 · 第 29 关 */
+ {name:"炮辗丹砂",chapter:"两步连杀",steps:2,pieces:[[84,1],[12,5],[36,6],[4,9],[3,10]],key:"炮九进四",
+  from:"杀法教学排局 · 由「马炮争雄」推演（引擎验证强制连杀）",
+  lore:"仅五子的精简排局：炮沉底照将，士起，车顺势一坐。子少路窄，最适合练「算清唯一应手」。",
+  idea:"要点：黑方只有一种解将方式，把它算透，第二手就一目了然。"},
+ /* 两步连杀 · 第 30 关 */
+ {name:"双车错·穿心",chapter:"两步连杀",steps:2,pieces:[[5,5],[6,11],[12,9],[20,5],[48,4],[84,1]],key:"车四退一",
+  from:"原创排局 · 双车错类（引擎验证 2 步强制连将杀）",
+  lore:"两车分占纵横两线交替照将，黑将左右都无立足之地；后车护住前车，前车沉底一击致命。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 31 关 */
+ {name:"车炮合势·穿心",chapter:"两步连杀",steps:2,pieces:[[12,9],[20,5],[27,6],[28,14],[33,4],[85,1]],key:"车七进一",
+  from:"原创排局 · 车炮合势类（引擎验证 2 步强制连将杀）",
+  lore:"先用炮把士象拴住或把线路封死，再让车沿空档切入，一击中的。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：确认黑士无法垫将，再沉车。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 32 关 */
+ {name:"双车错·逼宫",chapter:"两步连杀",steps:2,pieces:[[5,10],[6,5],[10,6],[13,10],[22,9],[43,5],[84,1]],key:"车三退二",
+  from:"原创排局 · 双车错类（引擎验证 2 步强制连将杀）",
+  lore:"车类杀法最忌孤军深入。先看清哪辆车已有同伴保护，再让它贴脸照将。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局有 2 种等效杀着，不必死记提示。"},
+ /* 两步连杀 · 第 33 关 */
+ {name:"车马冷着·逼宫",chapter:"两步连杀",steps:2,pieces:[[2,11],[12,9],[25,7],[28,14],[73,5],[77,4],[85,1]],key:"车八平六",
+  from:"原创排局 · 车马冷着类（引擎验证 2 步强制连将杀）",
+  lore:"马借车势、车藏马后：车先控线，马跳照将，将的每条退路都交给车的横线。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 34 关 */
+ {name:"马后炮·逼宫",chapter:"两步连杀",steps:2,pieces:[[3,10],[6,6],[7,5],[12,9],[13,4],[85,1]],key:"炮三退一",
+  from:"原创排局 · 马后炮类（引擎验证 2 步强制连将杀）",
+  lore:"马后炮看似只两步，实则要求马落点精确；先确认炮已压住将门，再跳马。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：炮先压住将门，马再落照将点。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 35 关 */
+ {name:"马后炮·连照",chapter:"两步连杀",steps:2,pieces:[[3,10],[5,10],[12,9],[21,6],[26,11],[36,4],[47,5],[85,1]],key:"马九进八",
+  from:"原创排局 · 马后炮类（引擎验证 2 步强制连将杀）",
+  lore:"炮不直接将军，却是这盘杀棋的真正主角——它把将的退路全部封死。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：算清黑将平出后的两条路是否都被炮封死。本局有 2 种等效杀着，不必死记提示。"},
+ /* 两步连杀 · 第 36 关 */
+ {name:"车炮合势·藏车",chapter:"两步连杀",steps:2,pieces:[[5,9],[26,11],[32,4],[47,5],[74,6],[86,1]],key:"车七进五",
+  from:"原创排局 · 车炮合势类（引擎验证 2 步强制连将杀）",
+  lore:"车炮同侧合势：炮封将门、车沉底照将，是中残局最常见的破防组合。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：炮负责封线，车负责照将，别让两子抢同一条线。本局有 2 种等效杀着，不必死记提示。"},
+ /* 两步连杀 · 第 37 关 */
+ {name:"双车错·合围",chapter:"两步连杀",steps:2,pieces:[[7,5],[12,9],[21,10],[38,11],[49,5],[85,1]],key:"车二退一",
+  from:"原创排局 · 双车错类（引擎验证 2 步强制连将杀）",
+  lore:"双车错的关键在于「错开一线」：一车封锁横线，另一车沿纵线切入，将门即刻落锁。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：先封横线，再沉纵线，次序反了就没有杀。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 38 关 */
+ {name:"车马冷着·合围",chapter:"两步连杀",steps:2,pieces:[[3,10],[4,9],[13,10],[24,4],[52,5],[75,1]],key:"车二进五",
+  from:"经典杀法变式 · 车马冷着类（引擎验证 2 步强制连将杀）",
+  lore:"马负责把将赶离原位，车负责接管纵横线，二者分工明确，次序不能颠倒。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：车控的横线就是马照将后黑将唯一被封死的方向。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 39 关 */
+ {name:"双车错·斜出",chapter:"两步连杀",steps:2,pieces:[[5,10],[11,14],[22,9],[23,10],[27,5],[43,5],[47,4],[86,1]],key:"车九平五",
+  from:"原创排局 · 双车错类（引擎验证 2 步强制连将杀）",
+  lore:"两车分占纵横两线交替照将，黑将左右都无立足之地；后车护住前车，前车沉底一击致命。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：先封横线，再沉纵线，次序反了就没有杀。本局有 2 种等效杀着，不必死记提示。"},
+ /* 两步连杀 · 第 40 关 */
+ {name:"马后炮·断后",chapter:"两步连杀",steps:2,pieces:[[5,10],[9,5],[22,9],[23,10],[38,6],[42,11],[48,4],[86,1]],key:"马六进七",
+  from:"原创排局 · 马后炮类（引擎验证 2 步强制连将杀）",
+  lore:"马后炮看似只两步，实则要求马落点精确；先确认炮已压住将门，再跳马。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：炮先压住将门，马再落照将点。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 41 关 */
+ {name:"重炮·压肋",chapter:"两步连杀",steps:2,pieces:[[4,9],[5,10],[14,5],[44,6],[46,6],[66,5],[86,1]],key:"炮一进四",
+  from:"经典杀法变式 · 重炮类（引擎验证 2 步强制连将杀）",
+  lore:"双炮封锁的是整条直线，把将的活动空间压到最小，是入门必练的炮类定式。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：先摆好炮架再发力，别让将有机会平出。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 42 关 */
+ {name:"马后炮·斜出",chapter:"两步连杀",steps:2,pieces:[[3,10],[4,9],[22,12],[27,6],[34,5],[38,11],[40,4],[41,5],[55,15],[85,1]],key:"马五进六",
+  from:"经典杀法变式 · 马后炮类（引擎验证 2 步强制连将杀）",
+  lore:"马与炮同处一线：马照将，炮封住退路，二者缺一，马后炮便不成杀。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：炮先压住将门，马再落照将点。本局有 2 种等效杀着，不必死记提示。"},
+ /* 两步连杀 · 第 43 关 */
+ {name:"车炮合势·镇门",chapter:"两步连杀",steps:2,pieces:[[3,9],[10,12],[18,11],[44,6],[53,5],[85,1]],key:"车一平六",
+  from:"原创排局 · 车炮合势类（引擎验证 2 步强制连将杀）",
+  lore:"先用炮把士象拴住或把线路封死，再让车沿空档切入，一击中的。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：确认黑士无法垫将，再沉车。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 44 关 */
+ {name:"车马冷着·穿宫",chapter:"两步连杀",steps:2,pieces:[[2,5],[3,10],[10,5],[12,4],[14,9],[23,10],[38,11],[86,1]],key:"马六退五",
+  from:"原创排局 · 车马冷着类（引擎验证 2 步强制连将杀）",
+  lore:"马负责把将赶离原位，车负责接管纵横线，二者分工明确，次序不能颠倒。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：车控的横线就是马照将后黑将唯一被封死的方向。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 45 关 */
+ {name:"车马冷着·回锋",chapter:"两步连杀",steps:2,pieces:[[4,9],[5,10],[13,10],[21,10],[23,10],[28,5],[35,7],[39,5],[40,4],[85,1]],key:"马五进四",
+  from:"经典杀法变式 · 车马冷着类（引擎验证 2 步强制连将杀）",
+  lore:"马借车势、车藏马后：车先控线，马跳照将，将的每条退路都交给车的横线。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 两步连杀 · 第 46 关 */
+ {name:"重炮·右肋",chapter:"两步连杀",steps:2,pieces:[[5,6],[18,11],[20,4],[21,9],[28,6],[35,5],[86,1]],key:"炮八进一",
+  from:"原创排局 · 重炮类（引擎验证 2 步强制连将杀）",
+  lore:"重炮成杀时，两炮之间必须恰有一子作炮架；先确认架子稳固，再落下致命一炮。第一手必须照将且不能让杀势中断；等黑方应手出现，再补上致命一刀。",
+  idea:"要点：两炮之间必须有一个炮架，且将吃不到前炮。本局有 2 种等效杀着，不必死记提示。"},
+ /* 三步绝杀 · 第 47 关 */
+ {name:"双解连将",chapter:"三步绝杀",steps:3,pieces:[[14,9],[5,10],[13,10],[15,12],[39,5],[40,4],[85,1]],key:"马五进六",
+  from:"杀法教学排局 · 由「车马绝杀」推演（引擎验证强制连杀）",
+  lore:"首着有两种等效杀着，黑方也有两种解将。分支一多，就必须按「所有应手都有杀」来验证自己的着法。",
+  idea:"要点：每走一步都问一句「黑若这样应，我还能照将吗」，三步之内答案都要是能。"},
+ /* 三步绝杀 · 第 48 关 */
+ {name:"盘马归边",chapter:"三步绝杀",steps:3,pieces:[[4,9],[5,10],[13,10],[6,12],[39,5],[40,4],[85,1]],key:"马五进六",
+  from:"杀法教学排局 · 由「车马绝杀」推演（引擎验证强制连杀）",
+  lore:"马借连续照将盘旋到边线，把将一步步赶向绝地。第二、三手有多种等效选择，练的是「保持杀势」而非背棋谱。",
+  idea:"要点：不必强求与提示相同，只要每手都照将且威胁不减，就是正解。"},
+ /* 三步绝杀 · 第 49 关 */
+ {name:"马后炮·侧翼",chapter:"三步绝杀",steps:3,pieces:[[3,15],[5,9],[6,4],[21,10],[23,10],[28,6],[53,4],[73,5],[86,1]],key:"炮八平四",
+  from:"原创排局 · 马后炮类（引擎验证 3 步强制连将杀）",
+  lore:"炮不直接将军，却是这盘杀棋的真正主角——它把将的退路全部封死。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：算清黑将平出后的两条路是否都被炮封死。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 50 关 */
+ {name:"双车错·贴身",chapter:"三步绝杀",steps:3,pieces:[[5,10],[13,9],[21,10],[30,4],[39,5],[41,5],[56,6],[84,1]],key:"车六平五",
+  from:"原创排局 · 双车错类（引擎验证 3 步强制连将杀）",
+  lore:"两车分占纵横两线交替照将，黑将左右都无立足之地；后车护住前车，前车沉底一击致命。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 51 关 */
+ {name:"双车错·换线",chapter:"三步绝杀",steps:3,pieces:[[2,11],[12,9],[13,10],[21,10],[24,15],[47,5],[53,5],[85,1]],key:"车七进四",
+  from:"原创排局 · 双车错类（引擎验证 3 步强制连将杀）",
+  lore:"双车错的关键在于「错开一线」：一车封锁横线，另一车沿纵线切入，将门即刻落锁。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：先封横线，再沉纵线，次序反了就没有杀。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 52 关 */
+ {name:"双车错·截将",chapter:"三步绝杀",steps:3,pieces:[[2,11],[3,10],[5,7],[6,5],[8,5],[13,9],[32,12],[84,1]],key:"车一退一",
+  from:"原创排局 · 双车错类（引擎验证 3 步强制连将杀）",
+  lore:"车类杀法最忌孤军深入。先看清哪辆车已有同伴保护，再让它贴脸照将。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 53 关 */
+ {name:"双车错·破士二",chapter:"三步绝杀",steps:3,pieces:[[2,11],[3,9],[21,10],[33,5],[40,4],[42,5],[48,4],[84,1]],key:"前车进三",
+  from:"原创排局 · 双车错类（引擎验证 3 步强制连将杀）",
+  lore:"两车分占纵横两线交替照将，黑将左右都无立足之地；后车护住前车，前车沉底一击致命。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：先封横线，再沉纵线，次序反了就没有杀。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 54 关 */
+ {name:"车马冷着·截将",chapter:"三步绝杀",steps:3,pieces:[[3,10],[13,10],[14,9],[32,4],[42,11],[53,5],[64,5],[84,1]],key:"马四进二",
+  from:"原创排局 · 车马冷着类（引擎验证 3 步强制连将杀）",
+  lore:"车马冷着常以「不响的一手」取胜——车按兵不动，马一跳即将局面锁死。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：车控的横线就是马照将后黑将唯一被封死的方向。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 55 关 */
+ {name:"单车破阵·横扫",chapter:"三步绝杀",steps:3,pieces:[[5,9],[18,11],[28,13],[32,7],[58,5],[85,1]],key:"车五进六",
+  from:"原创排局 · 单车破阵类（引擎验证 3 步强制连将杀）",
+  lore:"车走直线、控制面大，但必须确认落点有人保护，否则将一吃便前功尽弃。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：把车走到能同时控制横线与纵线的位置。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 56 关 */
+ {name:"双马饮泉·横扫",chapter:"三步绝杀",steps:3,pieces:[[3,9],[5,10],[12,4],[13,4],[30,5],[35,13],[85,1]],key:"马六进八",
+  from:"原创排局 · 双马饮泉类（引擎验证 3 步强制连将杀）",
+  lore:"双马盘环，一马照将、一马补位，两马互为犄角，将的每个出口都被马步接管。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：跳马前先查马腿，再确认另一匹马已封住出口。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 57 关 */
+ {name:"马后炮·封门",chapter:"三步绝杀",steps:3,pieces:[[5,10],[13,10],[14,9],[15,12],[39,5],[40,4],[68,6],[85,1]],key:"马五进六",
+  from:"经典杀法变式 · 马后炮类（引擎验证 3 步强制连将杀）",
+  lore:"马后炮看似只两步，实则要求马落点精确；先确认炮已压住将门，再跳马。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：算清黑将平出后的两条路是否都被炮封死。本局有 2 种等效杀着，不必死记提示。"},
+ /* 三步绝杀 · 第 58 关 */
+ {name:"车炮合势·叠炮",chapter:"三步绝杀",steps:3,pieces:[[2,13],[9,4],[22,9],[44,5],[79,6],[86,1]],key:"车一进二",
+  from:"原创排局 · 车炮合势类（引擎验证 3 步强制连将杀）",
+  lore:"车与炮一明一暗，车走明线、炮控暗线，黑方往往只能应出一手。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：炮负责封线，车负责照将，别让两子抢同一条线。本局有 2 种等效杀着，不必死记提示。"},
+ /* 三步绝杀 · 第 59 关 */
+ {name:"车马冷着·借力",chapter:"三步绝杀",steps:3,pieces:[[3,9],[6,7],[8,4],[13,10],[26,11],[29,13],[49,5],[51,4],[85,1]],key:"车五平六",
+  from:"原创排局 · 车马冷着类（引擎验证 3 步强制连将杀）",
+  lore:"马借车势、车藏马后：车先控线，马跳照将，将的每条退路都交给车的横线。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 60 关 */
+ {name:"马后炮·叠炮",chapter:"三步绝杀",steps:3,pieces:[[2,12],[3,10],[4,9],[13,10],[40,4],[41,5],[83,6],[85,1]],key:"马五进四",
+  from:"经典杀法变式 · 马后炮类（引擎验证 3 步强制连将杀）",
+  lore:"马后炮看似只两步，实则要求马落点精确；先确认炮已压住将门，再跳马。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：炮先压住将门，马再落照将点。本局正解唯一，找到那一将即可。"},
+ /* 三步绝杀 · 第 61 关 */
+ {name:"车炮合势·锁宫",chapter:"三步绝杀",steps:3,pieces:[[5,10],[10,4],[23,9],[43,6],[46,5],[84,1]],key:"车八进三",
+  from:"原创排局 · 车炮合势类（引擎验证 3 步强制连将杀）",
+  lore:"车与炮一明一暗，车走明线、炮控暗线，黑方往往只能应出一手。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：确认黑士无法垫将，再沉车。本局有 2 种等效杀着，不必死记提示。"},
+ /* 三步绝杀 · 第 62 关 */
+ {name:"马后炮·斜封",chapter:"三步绝杀",steps:3,pieces:[[4,9],[28,4],[38,11],[48,5],[78,6],[84,1]],key:"马八进七",
+  from:"原创排局 · 马后炮类（引擎验证 3 步强制连将杀）",
+  lore:"马与炮同处一线：马照将，炮封住退路，二者缺一，马后炮便不成杀。每走一步都问一句：「黑若这样解将，我还能继续照将吗？」三步之内答案都要是能。",
+  idea:"要点：炮先压住将门，马再落照将点。本局有 2 种等效杀着，不必死记提示。"},
+ /* 四步长杀 · 第 63 关 */
+ {name:"车马冷着·双解",chapter:"四步长杀",steps:4,pieces:[[2,11],[3,9],[18,4],[28,4],[34,5],[86,1]],key:"车二平六",
+  from:"原创排局 · 车马冷着类（引擎验证 4 步强制连将杀）",
+  lore:"车马冷着常以「不响的一手」取胜——车按兵不动，马一跳即将局面锁死。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 64 关 */
+ {name:"双车错·引将",chapter:"四步长杀",steps:4,pieces:[[3,9],[4,4],[21,10],[23,10],[29,5],[37,16],[42,6],[53,5],[86,1]],key:"车七进三",
+  from:"原创排局 · 双车错类（引擎验证 4 步强制连将杀）",
+  lore:"车类杀法最忌孤军深入。先看清哪辆车已有同伴保护，再让它贴脸照将。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 65 关 */
+ {name:"重炮·穿心",chapter:"四步长杀",steps:4,pieces:[[0,5],[4,12],[5,9],[7,4],[13,10],[22,11],[26,6],[30,6],[85,1]],key:"炮六进三",
+  from:"原创排局 · 重炮类（引擎验证 4 步强制连将杀）",
+  lore:"两炮叠于同一线，一炮作架、一炮发力。炮须隔子打，将既不能吃炮，也无处可逃。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：先摆好炮架再发力，别让将有机会平出。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 66 关 */
+ {name:"双马饮泉·引将",chapter:"四步长杀",steps:4,pieces:[[0,4],[2,11],[4,9],[18,4],[21,10],[44,5],[84,1]],key:"前马退七",
+  from:"原创排局 · 双马饮泉类（引擎验证 4 步强制连将杀）",
+  lore:"马的控制点不连续，因此必须两马配合：先算蹩马腿，再算另一匹马是否补上了缺口。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：跳马前先查马腿，再确认另一匹马已封住出口。本局有 2 种等效杀着，不必死记提示。"},
+ /* 四步长杀 · 第 67 关 */
+ {name:"车马冷着·引将",chapter:"四步长杀",steps:4,pieces:[[5,10],[21,10],[22,9],[35,4],[41,5],[84,1]],key:"车四平五",
+  from:"原创排局 · 车马冷着类（引擎验证 4 步强制连将杀）",
+  lore:"马负责把将赶离原位，车负责接管纵横线，二者分工明确，次序不能颠倒。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 68 关 */
+ {name:"双车错·藏车",chapter:"四步长杀",steps:4,pieces:[[3,12],[5,9],[18,11],[21,10],[28,4],[44,5],[53,6],[57,5],[84,1]],key:"车一进四",
+  from:"原创排局 · 双车错类（引擎验证 4 步强制连将杀）",
+  lore:"两车分占纵横两线交替照将，黑将左右都无立足之地；后车护住前车，前车沉底一击致命。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局有 2 种等效杀着，不必死记提示。"},
+ /* 四步长杀 · 第 69 关 */
+ {name:"车马冷着·连照",chapter:"四步长杀",steps:4,pieces:[[1,4],[19,15],[22,9],[51,5],[84,1]],key:"车三进三",
+  from:"原创排局 · 车马冷着类（引擎验证 4 步强制连将杀）",
+  lore:"车马冷着常以「不响的一手」取胜——车按兵不动，马一跳即将局面锁死。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 70 关 */
+ {name:"车炮合势·盘旋",chapter:"四步长杀",steps:4,pieces:[[6,11],[7,4],[13,9],[20,5],[25,15],[42,6],[60,4],[84,1]],key:"车七进一",
+  from:"原创排局 · 车炮合势类（引擎验证 4 步强制连将杀）",
+  lore:"车与炮一明一暗，车走明线、炮控暗线，黑方往往只能应出一手。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：炮负责封线，车负责照将，别让两子抢同一条线。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 71 关 */
+ {name:"双马饮泉·合围",chapter:"四步长杀",steps:4,pieces:[[8,6],[10,4],[14,9],[35,5],[38,11],[40,4],[84,1]],key:"马八进六",
+  from:"原创排局 · 双马饮泉类（引擎验证 4 步强制连将杀）",
+  lore:"双马盘环，一马照将、一马补位，两马互为犄角，将的每个出口都被马步接管。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：两马的控制点要互补，别都挤在同一侧。本局有 3 种等效杀着，不必死记提示。"},
+ /* 四步长杀 · 第 72 关 */
+ {name:"重炮·借炮",chapter:"四步长杀",steps:4,pieces:[[0,5],[6,11],[9,4],[21,10],[22,9],[44,6],[45,6],[86,1]],key:"炮九进三",
+  from:"原创排局 · 重炮类（引擎验证 4 步强制连将杀）",
+  lore:"重炮成杀时，两炮之间必须恰有一子作炮架；先确认架子稳固，再落下致命一炮。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：两炮之间必须有一个炮架，且将吃不到前炮。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 73 关 */
+ {name:"车炮合势·合围",chapter:"四步长杀",steps:4,pieces:[[5,9],[13,12],[17,5],[20,4],[21,10],[29,6],[42,11],[85,1]],key:"车一进一",
+  from:"原创排局 · 车炮合势类（引擎验证 4 步强制连将杀）",
+  lore:"车与炮一明一暗，车走明线、炮控暗线，黑方往往只能应出一手。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：确认黑士无法垫将，再沉车。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 74 关 */
+ {name:"马后炮·合围",chapter:"四步长杀",steps:4,pieces:[[3,10],[4,9],[13,10],[33,12],[40,4],[41,7],[42,11],[50,5],[85,1],[88,6]],key:"马五进六",
+  from:"经典杀法变式 · 马后炮类（引擎验证 4 步强制连将杀）",
+  lore:"马与炮同处一线：马照将，炮封住退路，二者缺一，马后炮便不成杀。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：炮先压住将门，马再落照将点。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 75 关 */
+ {name:"马后炮·借炮",chapter:"四步长杀",steps:4,pieces:[[3,10],[7,5],[12,9],[15,6],[28,4],[57,6],[84,1]],key:"马八退六",
+  from:"原创排局 · 马后炮类（引擎验证 4 步强制连将杀）",
+  lore:"马后炮看似只两步，实则要求马落点精确；先确认炮已压住将门，再跳马。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：算清黑将平出后的两条路是否都被炮封死。本局正解唯一，找到那一将即可。"},
+ /* 四步长杀 · 第 76 关 */
+ {name:"马后炮·断后二",chapter:"四步长杀",steps:4,pieces:[[3,10],[4,9],[6,11],[34,5],[40,4],[41,5],[46,6],[81,15],[85,1]],key:"炮八进五",
+  from:"经典杀法变式 · 马后炮类（引擎验证 4 步强制连将杀）",
+  lore:"炮不直接将军，却是这盘杀棋的真正主角——它把将的退路全部封死。长连杀的每一手都是强制的，走错一手、慢一拍，杀势即断。",
+  idea:"要点：炮先压住将门，马再落照将点。本局正解唯一，找到那一将即可。"},
+ /* 五步连杀 · 第 77 关 */
+ {name:"车马冷着·压肋",chapter:"五步连杀",steps:5,pieces:[[3,10],[11,12],[12,9],[13,10],[20,4],[23,10],[62,5],[85,1]],key:"马七退五",
+  from:"经典杀法变式 · 车马冷着类（引擎验证 5 步强制连将杀）",
+  lore:"马借车势、车藏马后：车先控线，马跳照将，将的每条退路都交给车的横线。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局正解唯一，找到那一将即可。"},
+ /* 五步连杀 · 第 78 关 */
+ {name:"双车错·右肋",chapter:"五步连杀",steps:5,pieces:[[4,9],[39,5],[40,4],[41,13],[52,5],[84,6],[85,1]],key:"车六进四",
+  from:"经典杀法变式 · 双车错类（引擎验证 5 步强制连将杀）",
+  lore:"双车错的关键在于「错开一线」：一车封锁横线，另一车沿纵线切入，将门即刻落锁。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：沉底照将的车必须受另一辆车保护。本局有 2 种等效杀着，不必死记提示。"},
+ /* 五步连杀 · 第 79 关 */
+ {name:"双车错·左肋",chapter:"五步连杀",steps:5,pieces:[[3,10],[4,9],[21,12],[34,5],[40,4],[57,5],[60,6],[85,1]],key:"车二进三",
+  from:"经典杀法变式 · 双车错类（引擎验证 5 步强制连将杀）",
+  lore:"车类杀法最忌孤军深入。先看清哪辆车已有同伴保护，再让它贴脸照将。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：先封横线，再沉纵线，次序反了就没有杀。本局有 2 种等效杀着，不必死记提示。"},
+ /* 五步连杀 · 第 80 关 */
+ {name:"马后炮·镇门",chapter:"五步连杀",steps:5,pieces:[[3,10],[4,9],[5,10],[11,13],[21,10],[28,5],[39,5],[40,4],[43,6],[85,1]],key:"炮二进四",
+  from:"经典杀法变式 · 马后炮类（引擎验证 5 步强制连将杀）",
+  lore:"马与炮同处一线：马照将，炮封住退路，二者缺一，马后炮便不成杀。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：炮先压住将门，马再落照将点。本局正解唯一，找到那一将即可。"},
+ /* 五步连杀 · 第 81 关 */
+ {name:"双马饮泉·左肋",chapter:"五步连杀",steps:5,pieces:[[5,10],[13,10],[14,9],[20,4],[26,4],[70,13],[85,1]],key:"马七退五",
+  from:"经典杀法变式 · 双马饮泉类（引擎验证 5 步强制连将杀）",
+  lore:"马的控制点不连续，因此必须两马配合：先算蹩马腿，再算另一匹马是否补上了缺口。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：两马的控制点要互补，别都挤在同一侧。本局正解唯一，找到那一将即可。"},
+ /* 五步连杀 · 第 82 关 */
+ {name:"车马冷着·右肋",chapter:"五步连杀",steps:5,pieces:[[5,9],[6,12],[13,10],[15,5],[21,10],[52,4],[85,1]],key:"车三进一",
+  from:"经典杀法变式 · 车马冷着类（引擎验证 5 步强制连将杀）",
+  lore:"马负责把将赶离原位，车负责接管纵横线，二者分工明确，次序不能颠倒。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：车控的横线就是马照将后黑将唯一被封死的方向。本局正解唯一，找到那一将即可。"},
+ /* 五步连杀 · 第 83 关 */
+ {name:"车马冷着·左肋二",chapter:"五步连杀",steps:5,pieces:[[3,10],[5,10],[13,10],[14,9],[33,12],[38,4],[58,5],[64,5],[84,1]],key:"马七进五",
+  from:"经典杀法变式 · 车马冷着类（引擎验证 5 步强制连将杀）",
+  lore:"马借车势、车藏马后：车先控线，马跳照将，将的每条退路都交给车的横线。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：马逼将往车够得着的方向走，杀势才连得上。本局有 2 种等效杀着，不必死记提示。"},
+ /* 五步连杀 · 第 84 关 */
+ {name:"双马饮泉·换线",chapter:"五步连杀",steps:5,pieces:[[4,9],[15,5],[18,4],[24,4],[26,11],[40,12],[67,1]],key:"马九进七",
+  from:"经典杀法变式 · 双马饮泉类（引擎验证 5 步强制连将杀）",
+  lore:"马的控制点不连续，因此必须两马配合：先算蹩马腿，再算另一匹马是否补上了缺口。终章考验：五手连将，全程不给黑方喘息，任何一手松懈都会被解将。",
+  idea:"要点：跳马前先查马腿，再确认另一匹马已封住出口。本局正解唯一，找到那一将即可。"}
+];
+/* ==================== 统一训练题库 ====================
+   合并原「定式 / 残局 / 杀招」三个入口：定式 7 课与杀招前 7 关是同一批局面，已整体删除；
+   残局 7 局局面不重复，保留其守和 / 限步取胜规则，并入末尾两章。
+   kind=mate 走强制连将杀校验；kind=puzzle 走原 AI 陪练守和 / 限步规则。 */
+const DRILLS=[
+ ...MATE_LESSONS.map((x,i)=>Object.assign({},x,{kind:'mate',srcIdx:i,brief:x.steps+' 步杀'})),
+ ...PUZZLES.map((x,i)=>Object.assign({},x,{kind:'puzzle',srcIdx:i,steps:0,key:'',
+   chapter:x.goal==='hold'?'古谱守和':'限步残局',
+   brief:x.goal==='hold'?'守满 '+x.moves+' 步':'限 '+x.moves+' 步取胜'}))
+];
+const HANDICAPS=[
+ {name:'让单车',desc:'黑方去一车',remove:[8]},
+ {name:'让双车',desc:'黑方去双车',remove:[0,8]},
+ {name:'让马炮',desc:'黑方去一马一炮',remove:[7,25]},
+ {name:'让车马炮',desc:'黑方去车马炮',remove:[0,7,25]}
+];
+const BGM_STYLES=[
+ {id:'guzheng',name:'古筝',base:293.66,scale:[0,2,4,7,9],wave:'triangle',bass:146.83},
+ {id:'dizi',name:'笛韵',base:392,scale:[0,2,4,7,9],wave:'sine',bass:196},
+ {id:'guqin',name:'古琴',base:196,scale:[0,3,5,7,10],wave:'triangle',bass:98},
+ {id:'electro',name:'电子',base:220,scale:[0,3,5,7,10],wave:'square',bass:110}
+];
+let SET={sound:true,music:true,theme:'neon',bgmStyle:'guzheng',bgmTempo:107,bgmVol:.6,sfxVol:.8};
+try{Object.assign(SET,JSON.parse(localStorage.getItem('xuanqi-set')||'{}'));}catch(e){}
+let wins=0;try{wins=Math.max(0,+(localStorage.getItem('xuanqi-wins')||0));}catch(e){}
+if(!wins){try{wins=Math.max(0,Math.min(LADDER.length,+(localStorage.getItem('xuanqi-stage')||0)))*3;}catch(e){}}
+const ladderLv=()=>Math.min(Math.floor(wins/3),LADDER.length-1);
+function persistSet(){try{localStorage.setItem('xuanqi-set',JSON.stringify(SET));}catch(e){}}
+function persistWins(){try{localStorage.setItem('xuanqi-wins',String(wins));}catch(e){}}
+
+const $=id=>document.getElementById(id);
+const boardCv=$('board'),fxCv=$('fx'),frame=$('frame');
+const ctx=boardCv.getContext('2d'),fctx=fxCv.getContext('2d');
+const CELL=64,PAD=46,BW=8*CELL+PAD*2,BH=9*CELL+PAD*2,PR=27;
+
+const G={
+  board:E.initial(),turn:RED,human:RED,level:1,flipped:false,
+  history:[],hashes:[],hash:0,selected:-1,legal:[],lastMove:null,
+  over:false,thinking:false,started:false,noCap:0,
+  anim:null,hint:null,sound:SET.sound,music:SET.music,theme:SET.theme,showHints:true,
+  mode:'classic',moveLimit:30,moveLeft:0,lastTick:-1,puzzleIdx:0,trainIdx:0,handicap:0,goal:'win',
+  clock:[0,0],searchId:0,caps:[[],[]],startTime:0,
+  mateIdx:0,mateK:0,mateTotal:0,mateErr:0,mateHints:0,mateStart:0,
+  mateBusy:false,mateDone:false,mateMsg:'',mateMsgUntil:0,drillIdx:-1
+};
+G.hash=E.hashBoard(G.board,RED);G.hashes=[G.hash];
+const curLesson=()=>G.mode==='puzzle'?PUZZLES[G.puzzleIdx]:G.mode==='mate'?MATE_LESSONS[G.mateIdx]:null;
+const isDrill=()=>G.mode==='puzzle';
+const isMateMode=()=>G.mode==='mate';
+const curDrill=()=>G.drillIdx>=0?DRILLS[G.drillIdx]:null;
+
+/* ---------- 经典杀招：强制连将杀求解器 ----------
+   mateSolve(b,turn,k)：红方还需 k 手把黑将将死。红方每手必须照将（连将杀），
+   黑方的所有合法应手都必须被覆盖。用于校验玩家着法、给出提示、选择黑方应手。 */
+let MATE_PROGRESS={};
+try{MATE_PROGRESS=JSON.parse(localStorage.getItem('xuanqi-mate')||'{}')||{};}catch(e){MATE_PROGRESS={};}
+function mateSaveProgress(){try{localStorage.setItem('xuanqi-mate',JSON.stringify(MATE_PROGRESS));}catch(e){}}
+/* 题库由 14 关扩充到 84 关：按关卡名迁移旧版星级，老进度不丢 */
+const MATE_OLD=['双车错','重炮','马后炮','卧槽马','铁门栓','双马饮泉','车马绝杀',
+  '借将封门','沉炮破士','马后藏车','借士照将','炮辗丹砂','双解连将','盘马归边'];
+try{
+  if(!localStorage.getItem('xuanqi-mate-v2')){
+    if(Object.keys(MATE_PROGRESS).length){
+      const nm={};
+      MATE_OLD.forEach((n,i)=>{const s=MATE_PROGRESS[i];if(s){const j=MATE_LESSONS.findIndex(x=>x.name===n);if(j>=0)nm[j]=Math.max(nm[j]||0,s);}});
+      // 索引 ≥14 的进度属于 84/91 关版，题库前 91 项顺序未变，直接沿用
+      Object.keys(MATE_PROGRESS).forEach(k=>{if(+k>=MATE_OLD.length)nm[k]=Math.max(nm[k]||0,MATE_PROGRESS[k]);});
+      MATE_PROGRESS=nm;
+    }
+    localStorage.setItem('xuanqi-mate-v2','1');mateSaveProgress();
+  }
+}catch(e){}
+const MATE_MEMO=new Map();
+function mateIsMate(b){return E.isInCheck(b,BLACK)&&E.legalMoves(b,BLACK).length===0;}
+function mateSolve(b,turn,k){
+  if(mateIsMate(b))return true;
+  if(k<=0)return false;
+  const key=E.hashBoard(b,turn)*8+k;
+  if(MATE_MEMO.has(key))return MATE_MEMO.get(key);
+  let res=false;
+  const ms=E.legalMoves(b,turn);
+  if(turn===RED){
+    for(const m of ms){
+      const cap=E.doMove(b,m);
+      if(!E.isInCheck(b,BLACK)){E.unMove(b,m,cap);continue;}
+      const ok=mateSolve(b,BLACK,k-1);
+      E.unMove(b,m,cap);
+      if(ok){res=true;break;}
+    }
+  }else if(ms.length){
+    res=true;
+    for(const m of ms){
+      const cap=E.doMove(b,m);
+      const ok=mateSolve(b,RED,k);
+      E.unMove(b,m,cap);
+      if(!ok){res=false;break;}
+    }
+  }
+  if(MATE_MEMO.size>200000)MATE_MEMO.clear();
+  MATE_MEMO.set(key,res);
+  return res;
+}
+function mateKeyMoves(b,k){
+  const out=[];
+  for(const m of E.legalMoves(b,RED)){
+    const cap=E.doMove(b,m);
+    if(!E.isInCheck(b,BLACK)){E.unMove(b,m,cap);continue;}
+    const ok=mateSolve(b,BLACK,k-1);
+    E.unMove(b,m,cap);
+    if(ok)out.push(m);
+  }
+  return out;
+}
+function mateMinSteps(b,max){for(let k=1;k<=max;k++)if(mateSolve(b,RED,k))return k;return 0;}
+function mateToughReply(b,k){
+  let best=-1,need=-1;
+  for(const m of E.legalMoves(b,BLACK)){
+    const c=E.doMove(b,m);
+    const n=mateMinSteps(b,k);
+    E.unMove(b,m,c);
+    if(n>need){need=n;best=m;}
+  }
+  return need>0?best:-1;
+}
+function mateAccept(m){
+  const b=G.board.slice();E.doMove(b,m);
+  return mateSolve(b,BLACK,G.mateK-1);
+}
+
+/* ---------- 音效 ---------- */
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+function tone(f,dur,type,vol,slide){
+  if(!G.sound)return;const a=ac();if(!a)return;
+  vol=(vol||.16)*SET.sfxVol*1.25;
+  const o=a.createOscillator(),g=a.createGain();
+  o.type=type||'sine';o.frequency.setValueAtTime(f,a.currentTime);
+  if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,slide),a.currentTime+dur);
+  g.gain.setValueAtTime(0,a.currentTime);
+  g.gain.linearRampToValueAtTime(vol,a.currentTime+.008);
+  g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur);
+  o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur+.02);
+}
+function noise(dur,vol,freq){
+  if(!G.sound)return;const a=ac();if(!a)return;
+  vol=(vol||.22)*SET.sfxVol*1.25;
+  const n=a.sampleRate*dur|0,buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2);
+  const s=a.createBufferSource();s.buffer=buf;
+  const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq||1400;f.Q.value=1.1;
+  const g=a.createGain();g.gain.value=vol;
+  s.connect(f);f.connect(g);g.connect(a.destination);s.start();
+}
+const SFX={
+  select(){tone(880,.07,'triangle',.07);},
+  move(){noise(.07,.16,1900);tone(320,.09,'sine',.1,180);},
+  capture(){noise(.22,.34,700);tone(150,.26,'sawtooth',.14,60);tone(520,.14,'square',.06,240);},
+  check(){tone(1046,.13,'square',.11);setTimeout(()=>tone(1568,.22,'square',.11),110);},
+  illegal(){tone(180,.12,'sine',.09,110);},
+  win(){[523,659,784,1046,1318].forEach((f,i)=>setTimeout(()=>tone(f,.4,'triangle',.13),i*110));},
+  lose(){[440,392,330,262].forEach((f,i)=>setTimeout(()=>tone(f,.45,'sine',.13),i*150));},
+  draw(){[523,784,523].forEach((f,i)=>setTimeout(()=>tone(f,.35,'sine',.11),i*140));},
+  start(){[392,523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.3,'triangle',.11),i*90));},
+  tick(){tone(1200,.05,'square',.06);},
+  timeout(){[660,520,392,262].forEach((f,i)=>setTimeout(()=>tone(f,.3,'sawtooth',.1),i*110));},
+  hintS(){tone(980,.09,'triangle',.08);setTimeout(()=>tone(1310,.12,'triangle',.08),80);},
+  undoS(){tone(500,.1,'sine',.09,300);},
+  stageup(){[523,659,784,1046,1318,1568].forEach((f,i)=>setTimeout(()=>tone(f,.35,'triangle',.12),i*90));}
+};
+
+/* ---------- 背景音乐（多风格程序化五声 loop + 自定义音频） ---------- */
+let musicTimer=null,musicNext=0,musicStep=0,customAudio=null,customURL=null;
+const MMEL=[0,null,2,null,4,null,7,null,9,null,7,null,4,null,2,null,
+            0,null,4,null,7,null,9,null,12,null,9,null,7,null,4,null,
+            2,null,4,null,2,null,0,null,4,null,0,null,2,null,4,null,
+            7,null,4,null,2,null,0,null,null,null,null,null,null,null];
+function mnote(f,when,dur,vol,type){
+  const a=ac();if(!a)return;
+  vol*=SET.bgmVol;
+  const o=a.createOscillator(),g=a.createGain();
+  o.type=type||'triangle';o.frequency.setValueAtTime(f,when);
+  g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(vol,when+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,when+dur);
+  o.connect(g);g.connect(a.destination);o.start(when);o.stop(when+dur+.02);
+}
+function musicTick(){
+  const a=ac();if(!a||!G.music||SET.bgmStyle==='custom')return;
+  const st=BGM_STYLES.find(s=>s.id===SET.bgmStyle)||BGM_STYLES[0];
+  const stepDur=60/SET.bgmTempo/2;
+  if(musicNext<a.currentTime)musicNext=a.currentTime+.05;
+  while(musicNext<a.currentTime+.35){
+    const deg=MMEL[musicStep%MMEL.length];
+    if(deg!=null){const oct=(deg/5)|0;const f=st.base*Math.pow(2,(st.scale[deg%5]+12*oct)/12);
+      mnote(f,musicNext,stepDur*1.8,.075,st.wave);mnote(f*2,musicNext,stepDur*.8,.023,'sine');}
+    if(musicStep%16===0)mnote(st.bass,musicNext,stepDur*5,.046,'sine');
+    musicNext+=stepDur;musicStep++;
+  }
+}
+function startMusic(){
+  if(!G.music)return;
+  if(SET.bgmStyle==='custom'){
+    if(customAudio){customAudio.volume=SET.bgmVol;customAudio.play().catch(()=>{});}
+    return;
+  }
+  if(musicTimer)return;
+  const a=ac();if(!a)return;
+  if(customAudio)customAudio.pause();
+  musicNext=a.currentTime+.1;musicStep=0;musicTimer=setInterval(musicTick,120);
+}
+function stopMusic(){
+  if(musicTimer){clearInterval(musicTimer);musicTimer=null;}
+  if(customAudio)customAudio.pause();
+}
+function applyBGM(){stopMusic();if(G.music)startMusic();}
+function setCustomBGM(file){
+  if(!file)return;
+  if(customURL)URL.revokeObjectURL(customURL);
+  customURL=URL.createObjectURL(file);
+  customAudio=new Audio(customURL);customAudio.loop=true;
+  SET.bgmStyle='custom';SET.bgmName=file.name;persistSet();
+  applyBGM();renderSettings();
+}
+
+/* ---------- 特效 ---------- */
+const FX={parts:[],rings:[],motes:[]};
+for(let i=0;i<26;i++)FX.motes.push({x:Math.random()*BW,y:Math.random()*BH,vx:(Math.random()-.5)*.12,vy:-.08-Math.random()*.16,r:Math.random()*1.5+.4,a:Math.random()*.3+.06});
+function burst(x,y,color,n){
+  for(let i=0;i<(n||26);i++){
+    const a=Math.random()*Math.PI*2,sp=1.2+Math.random()*4.4;
+    FX.parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:1,decay:.014+Math.random()*.022,r:1.4+Math.random()*3.2,color});
+  }
+  FX.rings.push({x,y,r:6,life:1,color});
+}
+function stepFX(dt){
+  for(let i=FX.parts.length-1;i>=0;i--){
+    const p=FX.parts[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.09*dt;p.vx*=.985;p.life-=p.decay*dt;
+    if(p.life<=0)FX.parts.splice(i,1);
+  }
+  for(let i=FX.rings.length-1;i>=0;i--){const r=FX.rings[i];r.r+=2.6*dt;r.life-=.035*dt;if(r.life<=0)FX.rings.splice(i,1);}
+  for(const m of FX.motes){m.x+=m.vx*dt;m.y+=m.vy*dt;if(m.y<-4){m.y=BH+4;m.x=Math.random()*BW;}if(m.x<-4)m.x=BW+4;if(m.x>BW+4)m.x=-4;}
+}
+function drawFX(){
+  fctx.clearRect(0,0,BW,BH);
+  fctx.save();
+  for(const m of FX.motes){fctx.globalAlpha=m.a;fctx.fillStyle='#8fd8ff';fctx.beginPath();fctx.arc(m.x,m.y,m.r,0,6.2832);fctx.fill();}
+  fctx.globalCompositeOperation='lighter';
+  for(const r of FX.rings){fctx.globalAlpha=r.life*.65;fctx.strokeStyle=r.color;fctx.lineWidth=2.4*r.life;fctx.beginPath();fctx.arc(r.x,r.y,r.r,0,6.2832);fctx.stroke();}
+  for(const p of FX.parts){fctx.globalAlpha=Math.max(0,p.life);fctx.fillStyle=p.color;fctx.shadowColor=p.color;fctx.shadowBlur=9;fctx.beginPath();fctx.arc(p.x,p.y,p.r*p.life,0,6.2832);fctx.fill();}
+  fctx.shadowBlur=0;
+  if(G.hint&&performance.now()<G.hint.until){
+    const a=toXY(G.hint.from),b=toXY(G.hint.to);
+    const k=Math.min(1,(G.hint.until-performance.now())/400);
+    fctx.globalAlpha=.85*k;fctx.strokeStyle='#ffce6a';fctx.fillStyle='#ffce6a';
+    fctx.shadowColor='#ffce6a';fctx.shadowBlur=14;fctx.lineWidth=4;fctx.lineCap='round';
+    const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
+    const sx=a.x+ux*PR*.7,sy=a.y+uy*PR*.7,ex=b.x-ux*PR*.85,ey=b.y-uy*PR*.85;
+    fctx.beginPath();fctx.moveTo(sx,sy);fctx.lineTo(ex,ey);fctx.stroke();
+    fctx.beginPath();fctx.moveTo(b.x-ux*PR*.5,b.y-uy*PR*.5);
+    fctx.lineTo(ex-uy*8,ey+ux*8);fctx.lineTo(ex+uy*8,ey-ux*8);fctx.closePath();fctx.fill();
+  }
+  fctx.restore();
+}
+
+/* ---------- 棋盘绘制 ---------- */
+let bgCanvas=null,dpr=1,viewScale=1;
+function toXY(i){
+  let r=E.rowOf(i),c=E.colOf(i);
+  if(G.flipped){r=9-r;c=8-c;}
+  return{x:PAD+c*CELL,y:PAD+r*CELL,r,c};
+}
+function fromXY(x,y){
+  let c=Math.round((x-PAD)/CELL),r=Math.round((y-PAD)/CELL);
+  if(r<0||r>9||c<0||c>8)return -1;
+  const px=PAD+c*CELL,py=PAD+r*CELL;
+  if(Math.hypot(x-px,y-py)>CELL*.48)return -1;
+  if(G.flipped){r=9-r;c=8-c;}
+  return r*9+c;
+}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+
+function buildBG(){
+  const th=theme();
+  bgCanvas=document.createElement('canvas');
+  bgCanvas.width=boardCv.width;bgCanvas.height=boardCv.height;
+  const g=bgCanvas.getContext('2d');
+  g.setTransform(viewScale*dpr,0,0,viewScale*dpr,0,0);
+  const grd=g.createLinearGradient(0,0,BW,BH);
+  grd.addColorStop(0,th.bg[0]);grd.addColorStop(.5,th.bg[1]);grd.addColorStop(1,th.bg[2]);
+  rr(g,0,0,BW,BH,15);g.fillStyle=grd;g.fill();
+  const rg=g.createRadialGradient(BW/2,BH/2,40,BW/2,BH/2,BH*.62);
+  rg.addColorStop(0,th.glow);rg.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=rg;g.fillRect(0,0,BW,BH);
+
+  g.strokeStyle=th.frame;g.lineWidth=1.6;
+  g.shadowColor=th.frameGlow;g.shadowBlur=6;
+  rr(g,PAD-16,PAD-16,8*CELL+32,9*CELL+32,4);g.stroke();
+  g.shadowBlur=0;
+  g.strokeStyle=th.frame;g.lineWidth=1;
+  rr(g,PAD-21,PAD-21,8*CELL+42,9*CELL+42,6);g.stroke();
+
+  g.strokeStyle=th.grid;g.lineWidth=1.1;
+  g.shadowColor=th.gridGlow;g.shadowBlur=4;
+  for(let r=0;r<10;r++){g.beginPath();g.moveTo(PAD,PAD+r*CELL);g.lineTo(PAD+8*CELL,PAD+r*CELL);g.stroke();}
+  for(let c=0;c<9;c++){
+    if(c===0||c===8){g.beginPath();g.moveTo(PAD+c*CELL,PAD);g.lineTo(PAD+c*CELL,PAD+9*CELL);g.stroke();}
+    else{
+      g.beginPath();g.moveTo(PAD+c*CELL,PAD);g.lineTo(PAD+c*CELL,PAD+4*CELL);g.stroke();
+      g.beginPath();g.moveTo(PAD+c*CELL,PAD+5*CELL);g.lineTo(PAD+c*CELL,PAD+9*CELL);g.stroke();
+    }
+  }
+  g.lineWidth=1.2;g.strokeStyle=th.palace;g.shadowColor=th.palace;
+  const pal=[[3,0,5,2],[5,0,3,2],[3,7,5,9],[5,7,3,9]];
+  for(const p of pal){g.beginPath();g.moveTo(PAD+p[0]*CELL,PAD+p[1]*CELL);g.lineTo(PAD+p[2]*CELL,PAD+p[3]*CELL);g.stroke();}
+  g.shadowBlur=0;
+
+  const marks=[[1,2],[7,2],[1,7],[7,7],[0,3],[2,3],[4,3],[6,3],[8,3],[0,6],[2,6],[4,6],[6,6],[8,6]];
+  g.strokeStyle=th.mark;g.lineWidth=1.1;
+  for(const m of marks){
+    const x=PAD+m[0]*CELL,y=PAD+m[1]*CELL,d=5,l=10;
+    for(const sx of[-1,1])for(const sy of[-1,1]){
+      if(m[0]===0&&sx===-1)continue;if(m[0]===8&&sx===1)continue;
+      g.beginPath();g.moveTo(x+sx*d,y+sy*(d+l));g.lineTo(x+sx*d,y+sy*d);g.lineTo(x+sx*(d+l),y+sy*d);g.stroke();
+    }
+  }
+
+  g.font='26px "KaiTi","STKaiti","Noto Serif SC",serif';
+  g.textAlign='center';g.textBaseline='middle';
+  g.fillStyle=th.river;g.shadowColor=th.river;g.shadowBlur=10;
+  const ry=PAD+4.5*CELL;
+  g.save();g.translate(PAD+1.7*CELL,ry);g.fillText('楚 河',0,0);g.restore();
+  g.save();g.translate(PAD+6.3*CELL,ry);g.fillText('漢 界',0,0);g.restore();
+  g.shadowBlur=0;
+
+  g.font='12px "KaiTi","STKaiti",serif';
+  const botSide=G.flipped?BLACK:RED,topSide=1-botSide;
+  const label=(side,c)=>side===RED?CNUM[9-c]:String(c+1);
+  const colOfSide=side=>side===RED?th.labelR:th.labelB;
+  for(let c=0;c<9;c++){
+    const x=PAD+c*CELL,bc=G.flipped?8-c:c;
+    g.fillStyle=colOfSide(botSide);g.fillText(label(botSide,bc),x,PAD+9*CELL+27);
+    g.fillStyle=colOfSide(topSide);g.fillText(label(topSide,bc),x,PAD-27);
+  }
+}
+
+function resize(){
+  const cssW=boardCv.parentElement.clientWidth-12;
+  const w=Math.max(240,Math.min(604,cssW));
+  viewScale=w/BW;dpr=Math.min(2.5,window.devicePixelRatio||1);
+  const h=BH*viewScale;
+  for(const cv of[boardCv,fxCv]){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  boardCv.style.height=h+'px';fxCv.style.height=h+'px';
+  ctx.setTransform(viewScale*dpr,0,0,viewScale*dpr,0,0);
+  fctx.setTransform(viewScale*dpr,0,0,viewScale*dpr,0,0);
+  buildBG();
+}
+
+function drawPiece(g,x,y,p,opt){
+  opt=opt||{};
+  const sc=opt.scale||1,r=PR*sc,red=E.sideOf(p)===RED;
+  const pc=red?theme().red:theme().blk;
+  g.save();
+  if(opt.alpha!=null)g.globalAlpha=opt.alpha;
+  g.beginPath();g.ellipse(x,y+r*.82,r*.86,r*.3,0,0,6.2832);
+  g.fillStyle='rgba(0,0,0,.42)';g.fill();
+  const grd=g.createRadialGradient(x-r*.34,y-r*.42,r*.12,x,y,r*1.02);
+  grd.addColorStop(0,pc.g[0]);grd.addColorStop(.55,pc.g[1]);grd.addColorStop(1,pc.g[2]);
+  g.beginPath();g.arc(x,y,r,0,6.2832);g.fillStyle=grd;g.fill();
+  g.lineWidth=2*sc;g.strokeStyle=pc.ring;
+  g.shadowColor=pc.glow;g.shadowBlur=opt.sel?26:11;g.stroke();g.shadowBlur=0;
+  g.beginPath();g.arc(x,y,r*.79,0,6.2832);g.lineWidth=1*sc;
+  g.strokeStyle=pc.inner;g.stroke();
+  g.fillStyle=pc.txt;
+  g.font='700 '+Math.round(r*1.06)+'px "KaiTi","STKaiti","Noto Serif SC","SimSun",serif';
+  g.textAlign='center';g.textBaseline='middle';
+  g.shadowColor=pc.txtGlow;g.shadowBlur=9;
+  g.fillText(CHARS[E.sideOf(p)][E.typeOf(p)],x,y+r*.05);
+  g.restore();
+}
+
+function drawBoard(now){
+  ctx.clearRect(0,0,BW,BH);
+  if(bgCanvas)ctx.drawImage(bgCanvas,0,0,BW,BH);
+  const chkSide=!G.over&&E.isInCheck(G.board,G.turn)?G.turn:-1;
+  const kingPos=chkSide>=0?E.findKing(G.board,chkSide):-1;
+
+  if(G.lastMove){
+    for(const i of[G.lastMove.from,G.lastMove.to]){
+      const p=toXY(i),x=p.x,y=p.y,d=PR+5,l=9;
+      ctx.strokeStyle='rgba(255,206,106,.75)';ctx.lineWidth=1.8;
+      ctx.shadowColor='rgba(255,190,90,.6)';ctx.shadowBlur=7;
+      for(const sx of[-1,1])for(const sy of[-1,1]){
+        ctx.beginPath();ctx.moveTo(x+sx*d,y+sy*(d-l));ctx.lineTo(x+sx*d,y+sy*d);ctx.lineTo(x+sx*(d-l),y+sy*d);ctx.stroke();
+      }
+      ctx.shadowBlur=0;
+    }
+  }
+  if(G.selected>=0){
+    const p=toXY(G.selected);
+    ctx.strokeStyle='rgba(255,206,106,.9)';ctx.lineWidth=2;
+    ctx.shadowColor='#ffce6a';ctx.shadowBlur=14;
+    ctx.beginPath();ctx.arc(p.x,p.y,PR+5+Math.sin(now/220)*1.6,0,6.2832);ctx.stroke();ctx.shadowBlur=0;
+    if(G.showHints)for(const m of G.legal){
+      const to=m%90,q=toXY(to);
+      if(G.board[to]){
+        ctx.strokeStyle='rgba(255,80,110,.9)';ctx.lineWidth=2.4;ctx.shadowColor='#ff4d63';ctx.shadowBlur=12;
+        ctx.beginPath();ctx.arc(q.x,q.y,PR+4,0,6.2832);ctx.stroke();ctx.shadowBlur=0;
+      }else{
+        ctx.fillStyle='rgba(110,235,255,.75)';ctx.shadowColor='#2fe0ff';ctx.shadowBlur=10;
+        ctx.beginPath();ctx.arc(q.x,q.y,5.2+Math.sin(now/300)*.7,0,6.2832);ctx.fill();ctx.shadowBlur=0;
+      }
+    }
+  }
+  if(G.hover>=0&&G.hover!==G.selected&&!G.anim){
+    const p=toXY(G.hover);
+    ctx.strokeStyle='rgba(160,220,255,.28)';ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.arc(p.x,p.y,PR+3,0,6.2832);ctx.stroke();
+  }
+
+  const anim=G.anim;
+  for(let i=0;i<90;i++){
+    const p=G.board[i];if(!p)continue;
+    if(anim&&i===anim.to)continue;
+    const xy=toXY(i);
+    const sel=i===G.selected;
+    drawPiece(ctx,xy.x,xy.y-(sel?3:0),p,{sel:sel,scale:sel?1.06:1});
+    if(i===kingPos){
+      ctx.strokeStyle='rgba(255,60,80,'+(.55+Math.sin(now/140)*.35)+')';
+      ctx.lineWidth=3;ctx.shadowColor='#ff2d4d';ctx.shadowBlur=20;
+      ctx.beginPath();ctx.arc(xy.x,xy.y,PR+7,0,6.2832);ctx.stroke();ctx.shadowBlur=0;
+    }
+  }
+  if(anim){
+    const t=Math.min(1,(now-anim.start)/anim.dur),e=1-Math.pow(1-t,3);
+    const a=toXY(anim.from),b=toXY(anim.to);
+    const x=a.x+(b.x-a.x)*e,y=a.y+(b.y-a.y)*e-Math.sin(t*Math.PI)*13;
+    drawPiece(ctx,x,y,anim.piece,{sel:true,scale:1+Math.sin(t*Math.PI)*.09});
+    if(t>=1){
+      if(anim.cap){
+        burst(b.x,b.y,E.sideOf(anim.cap)===RED?'#ff5a72':'#3ce4ff',34);
+        burst(b.x,b.y,'#ffce6a',14);
+        frame.classList.remove('shake');void frame.offsetWidth;frame.classList.add('shake');
+      }
+      G.anim=null;
+      afterMove();
+    }
+  }
+}
+
+let lastT=performance.now();
+function loop(now){
+  const dt=Math.min(3,(now-lastT)/16.67);lastT=now;
+  stepFX(dt);drawBoard(now);drawFX();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- 中文记谱 ---------- */
+function notation(b,from,to){
+  const p=b[from],t=E.typeOf(p),s=E.sideOf(p);
+  const fr=E.rowOf(from),fc=E.colOf(from),tr=E.rowOf(to),tc=E.colOf(to);
+  const name=CHARS[s][t];
+  const file=c=>s===RED?9-c:c+1;
+  const num=n=>s===RED?CNUM[n]:String(n);
+  const same=[];
+  for(let r=0;r<10;r++)if(b[r*9+fc]&&E.typeOf(b[r*9+fc])===t&&E.sideOf(b[r*9+fc])===s)same.push(r);
+  let head;
+  if(same.length>1){
+    same.sort((a,c)=>s===RED?a-c:c-a);
+    const i=same.indexOf(fr);
+    const pos=same.length===2?(i===0?'前':'后'):same.length===3?(i===0?'前':i===1?'中':'后'):(i===0?'前':i===same.length-1?'后':CNUM[i+1]);
+    head=pos+name;
+  }else head=name+num(file(fc));
+  let act,tgt;
+  if(tr===fr){act='平';tgt=num(file(tc));}
+  else{
+    const fwd=s===RED?tr<fr:tr>fr;
+    act=fwd?'进':'退';
+    tgt=(t===E.HORSE||t===E.ELEPHANT||t===E.ADVISOR)?num(file(tc)):num(Math.abs(tr-fr));
+  }
+  return head+act+tgt;
+}
+
+/* ---------- 对局流程 ---------- */
+function newGame(level,human,mode,limit,extra){
+  cancelSearch();
+  G.mode=mode||G.mode;G.moveLimit=limit||G.moveLimit;
+  if(G.mode!=='mate'&&G.mode!=='puzzle')G.drillIdx=-1;
+  if(G.mode==='ladder')level=LADDER[ladderLv()].lv;
+  if(G.mode==='puzzle'){
+    G.puzzleIdx=extra!=null?extra:G.puzzleIdx;
+    const pz=PUZZLES[G.puzzleIdx];level=pz.lv;human=RED;G.moveLimit=pz.moves;G.goal=pz.goal||'win';
+    G.mateStart=Date.now();G.mateErr=0;G.mateHints=0;G.mateDone=false;G.mateBusy=false;G.mateMsg='';G.mateMsgUntil=0;
+  }
+  if(G.mode==='handicap'){G.handicap=extra!=null?extra:G.handicap;human=RED;}
+  if(isMateMode()){
+    G.mateIdx=extra!=null?extra:G.mateIdx;
+    const ls=MATE_LESSONS[G.mateIdx];
+    level=0;human=RED;G.goal='win';
+    G.mateK=ls.steps;G.mateTotal=ls.steps;G.mateErr=0;G.mateHints=0;
+    G.mateStart=Date.now();G.mateBusy=false;G.mateDone=false;G.mateMsg='';G.mateMsgUntil=0;
+    MATE_MEMO.clear();
+  }
+  if(!isDrill()&&!isMateMode())G.goal='win';
+  G.level=level;G.human=human;
+  G.board=E.initial();
+  if(isDrill()||isMateMode()){G.board=new Array(90).fill(0);for(const[i,p]of curLesson().pieces)G.board[i]=p;}
+  if(G.mode==='handicap'){for(const i of HANDICAPS[G.handicap].remove)G.board[i]=0;}
+  G.turn=RED;G.history=[];G.caps=[[],[]];
+  G.hash=E.hashBoard(G.board,RED);G.hashes=[G.hash];
+  G.selected=-1;G.legal=[];G.lastMove=null;G.over=false;G.thinking=false;G.hover=-1;
+  G.anim=null;G.hint=null;G.noCap=0;G.clock=[0,0];G.started=true;G.startTime=Date.now();
+  G.flipped=human===BLACK;
+  FX.parts.length=0;FX.rings.length=0;
+  $('overModal').classList.remove('on');
+  $('mateModal').classList.remove('on');
+  if(isDrill())G.moveLeft=G.moveLimit;
+  startMoveClock();
+  updateAll();
+  SFX.start();startMusic();
+  if(G.turn!==G.human)requestAI();
+}
+function modalOpen(){return $('setupModal').classList.contains('on')||$('settingsModal').classList.contains('on');}
+function startMoveClock(){if(!isDrill())G.moveLeft=G.moveLimit;G.lastTick=-1;}
+
+function playMove(m){
+  const from=(m/90)|0,to=m%90,piece=G.board[from],cap=G.board[to];
+  const note=notation(G.board,from,to);
+  G.history.push({from,to,piece,cap,note,board:G.board.slice(),turn:G.turn,hashBefore:G.hash,noCap:G.noCap});
+  G.anim={from,to,piece,cap,start:performance.now(),dur:185};
+  E.doMove(G.board,m);
+  if(isMateMode()&&E.sideOf(piece)===G.human)G.mateK--;
+  G.noCap=cap?0:G.noCap+1;
+  if(cap)G.caps[1-E.sideOf(cap)].push(cap);
+  G.lastMove={from,to};G.selected=-1;G.legal=[];G.hint=null;
+  G.turn=1-G.turn;
+  G.hash=E.hashBoard(G.board,G.turn);
+  G.hashes.push(G.hash);
+  if(cap)SFX.capture();else SFX.move();
+  updateAll();
+}
+
+function afterMove(){
+  if(G.over)return;
+  if(isMateMode()){
+    if(mateIsMate(G.board)){mateClear();return;}
+    if(G.turn===BLACK){
+      if(G.mateK<=0){mateFail('杀势已失 · 未能在规定步数内成杀');return;}
+      G.mateBusy=true;updateAll();
+      setTimeout(()=>{
+        G.mateBusy=false;
+        if(!G.started||G.over||!isMateMode()||G.turn!==BLACK)return;
+        const r=mateToughReply(G.board,G.mateK);
+        if(r<0){mateFail('黑方脱逃 · 连杀未成');return;}
+        playMove(r);
+      },420);
+      return;
+    }
+    updateAll();
+    return;
+  }
+  const replies=E.legalMoves(G.board,G.turn);
+  const chk=E.isInCheck(G.board,G.turn);
+  if(replies.length===0){
+    endGame(1-G.turn,chk?'将死绝杀，无子可解':'困毙无着，判负');
+    return;
+  }
+  if(chk){showBanner('将军','#ff4d63');SFX.check();}
+  const rep=G.hashes.filter(h=>h===G.hash).length;
+  if(rep>=3){endGame(-1,'三次重复局面 · 不变作和');return;}
+  if(G.noCap>=120){endGame(-1,'60 回合未吃子 · 自然作和');return;}
+  if(isDrill()&&G.turn!==G.human){
+    G.moveLeft--;
+    if(G.moveLeft<=0){
+      G.moveLeft=0;
+      if(G.goal==='hold'){showBanner('守满','#ffce6a');endGame(G.human,'守满 '+G.moveLimit+' 步 · 残局挑战达成');}
+      else{SFX.timeout();endGame(1-G.human,'步数耗尽 · 未在 '+G.moveLimit+' 步内取胜');}
+      return;
+    }
+  }
+  updateAll();
+  if(G.turn===G.human)startMoveClock();
+  if(G.turn!==G.human)requestAI();
+}
+
+function endGame(winner,reason){
+  if(isMateMode()||(G.mode==='puzzle'&&G.drillIdx>=0)){
+    if(winner===G.human)mateClear(reason);else mateFail(reason);return;
+  }
+  G.over=true;G.selected=-1;G.legal=[];cancelSearch();
+  const humanWin=winner===G.human;
+  if(G.mode==='ladder'&&humanWin){
+    const before=ladderLv();wins++;persistWins();const after=ladderLv();
+    reason+=' · 累计 '+wins+' 胜';
+    if(after>before){reason+=' · 晋级 '+LADDER[after].name+'！';setTimeout(()=>SFX.stageup(),500);}
+    else if(after<LADDER.length-1)reason+=' · 再胜 '+(3-wins%3)+' 局升级';
+    else reason+=' · 棋圣巅峰';
+  }
+  const t=$('resultTitle');
+  if(winner<0){t.textContent='和';t.className='result-title draw';SFX.draw();}
+  else if(humanWin){t.textContent='胜';t.className='result-title win';SFX.win();
+    for(let i=0;i<7;i++)setTimeout(()=>burst(PAD+Math.random()*8*CELL,PAD+Math.random()*9*CELL,['#ffce6a','#ff5a72','#3ce4ff','#8ef0d0'][i%4],30),i*130);
+  }else{t.textContent='负';t.className='result-title lose';SFX.lose();}
+  $('resultReason').textContent=reason;
+  $('stMoves').textContent=Math.ceil(G.history.length/2);
+  $('stCaps').textContent=G.caps[G.human].length;
+  $('stTime').textContent=fmt((Date.now()-G.startTime)/1000|0);
+  showBanner(winner<0?'和棋':humanWin?'胜':'负',winner<0?'#54e6ff':humanWin?'#ffce6a':'#7f93b8');
+  updateAll();
+  setTimeout(()=>$('overModal').classList.add('on'),900);
+}
+
+function undo(){
+  if(isMateMode())return;
+  if(!G.history.length||G.anim)return;
+  cancelSearch();
+  let n=0;
+  while(G.history.length&&n<2){
+    const h=G.history.pop();
+    G.board=h.board;G.turn=h.turn;G.hash=h.hashBefore;G.noCap=h.noCap;
+    G.hashes.pop();G.caps[RED].length=0;G.caps[BLACK].length=0;
+    n++;
+    if(G.turn===G.human)break;
+  }
+  for(const h of G.history)if(h.cap)G.caps[1-E.sideOf(h.cap)].push(h.cap);
+  G.over=false;G.selected=-1;G.legal=[];G.hint=null;G.hover=-1;
+  const last=G.history[G.history.length-1];
+  G.lastMove=last?{from:last.from,to:last.to}:null;
+  $('overModal').classList.remove('on');
+  if(isDrill())G.moveLeft=G.moveLimit-G.history.filter(h=>h.turn===G.human).length;
+  if(G.turn===G.human)startMoveClock();
+  SFX.undoS();updateAll();
+  if(G.turn!==G.human)requestAI();
+}
+
+function resign(){
+  if(isMateMode())return;
+  if(G.over||!G.started)return;
+  endGame(1-G.human,'主动认输');
+}
+
+/* ---------- AI ---------- */
+let worker=null,workerDead=false,pending=null;
+const workerSrc=[
+  'const engine=('+createEngine.toString()+')();',
+  'self.onmessage=function(e){',
+  '  const d=e.data;',
+  '  if(d.cmd!=="search")return;',
+  '  const r=engine.search(d.board,d.side,{maxDepth:d.maxDepth,timeMs:d.timeMs,history:d.history,jitter:d.jitter,',
+  '    onInfo:function(i){self.postMessage({type:"info",id:d.id,depth:i.depth,score:i.score,nodes:i.nodes,time:i.time});}});',
+  '  self.postMessage({type:"best",id:d.id,move:r.move,score:r.score,depth:r.depth,nodes:r.nodes,time:r.time});',
+  '};'
+].join('\n');
+try{
+  worker=new Worker(URL.createObjectURL(new Blob([workerSrc],{type:'text/javascript'})));
+  worker.onmessage=e=>{
+    const d=e.data;
+    if(!pending||d.id!==pending.id)return;
+    if(d.type==='info'){
+      $('thinkText').textContent='AI 思考中 · 深度 '+d.depth+' · '+Math.round(d.nodes/1000)+'k 节点';
+      return;
+    }
+    const p=pending;pending=null;clearTimeout(p.timer);p.cb(d);
+  };
+  worker.onerror=()=>{workerDead=true;worker=null;if(pending){const p=pending;pending=null;clearTimeout(p.timer);localSearch(p);}};
+}catch(e){workerDead=true;}
+
+function localSearch(p){
+  setTimeout(()=>{
+    const r=E.search(p.opts.board,p.opts.side,p.opts);
+    p.cb({move:r.move,score:r.score,depth:r.depth,nodes:r.nodes,time:r.time});
+  },30);
+}
+function cancelSearch(){
+  G.searchId++;
+  if(pending){clearTimeout(pending.timer);pending=null;}
+  G.thinking=false;$('thinking').classList.remove('on');
+}
+function runSearch(opts,cb){
+  const id=++G.searchId;
+  const p={id,opts,cb,timer:null};
+  if(worker&&!workerDead){
+    pending=p;
+    p.timer=setTimeout(()=>{
+      if(pending!==p)return;
+      pending=null;workerDead=true;try{worker.terminate();}catch(e){}worker=null;localSearch(p);
+    },opts.timeMs+6000);
+    worker.postMessage({cmd:'search',id,board:opts.board,side:opts.side,maxDepth:opts.maxDepth,timeMs:opts.timeMs,history:opts.history,jitter:opts.jitter});
+  }else localSearch(p);
+  return id;
+}
+
+function requestAI(){
+  if(G.over||modalOpen())return;
+  G.thinking=true;
+  const cfg=LEVELS[G.level];
+  $('thinkText').textContent='AI 思考中';
+  $('thinking').classList.add('on');
+  updateAll();
+  const myId=G.searchId+1;
+  runSearch({board:G.board.slice(),side:G.turn,maxDepth:cfg.depth,timeMs:cfg.time,jitter:cfg.jitter,history:G.hashes.slice()},res=>{
+    if(myId!==G.searchId||G.over)return;
+    G.thinking=false;$('thinking').classList.remove('on');
+    if(res.move<0){endGame(G.human,'AI 无着可走');return;}
+    playMove(res.move);
+  });
+}
+
+function hint(){
+  if(G.over||G.thinking||G.turn!==G.human||G.anim)return;
+  if(isMateMode()){
+    if(G.mateBusy)return;
+    const ms=mateKeyMoves(G.board,G.mateK);
+    if(!ms.length)return;
+    const mv=ms[0],from=(mv/90)|0,to=mv%90;
+    G.hint={from,to,until:performance.now()+4200};
+    G.selected=from;
+    G.legal=E.legalMoves(G.board,G.human).filter(m=>((m/90)|0)===from);
+    G.mateHints++;
+    G.mateMsg='提示：'+notation(G.board,from,to)+' · 保持连将，'+G.mateK+' 手内成杀';
+    G.mateMsgUntil=performance.now()+4200;
+    SFX.hintS();updateAll();
+    return;
+  }
+  G.thinking=true;$('thinkText').textContent='正在计算最佳着法';$('thinking').classList.add('on');
+  const myId=G.searchId+1;
+  runSearch({board:G.board.slice(),side:G.human,maxDepth:4,timeMs:1400,jitter:0,history:G.hashes.slice()},res=>{
+    if(myId!==G.searchId)return;
+    G.thinking=false;$('thinking').classList.remove('on');
+    if(res.move<0)return;
+    G.hint={from:(res.move/90)|0,to:res.move%90,until:performance.now()+3200};
+    G.selected=G.hint.from;
+    G.legal=E.legalMoves(G.board,G.human).filter(m=>((m/90)|0)===G.hint.from);
+    SFX.hintS();updateAll();
+  });
+}
+
+/* ---------- UI ---------- */
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function showBanner(text,color){
+  const b=$('banner');b.textContent=text;b.style.color=color;
+  b.classList.remove('show');void b.offsetWidth;b.classList.add('show');
+}
+function barHTML(side){
+  const isAI=side!==G.human;
+  const red=side===RED;
+  const caps=G.caps[side];
+  const capStr=caps.map(p=>'<span class="mini" style="color:'+(E.sideOf(p)===RED?'#ff8b98':'#9df0ff')+'">'+CHARS[E.sideOf(p)][E.typeOf(p)]+'</span>').join('');
+  const name=isAI?'玄棋 AI':'你';
+  const stage=ladderLv();
+  const tag=isAI?(G.mode==='ladder'?LADDER[stage].name+' Lv'+(stage+1):G.mode==='puzzle'?(G.goal==='hold'?'名局守和':'限步残局'):G.mode==='mate'?'连杀训练 · 最顽应手':G.mode==='handicap'?HANDICAPS[G.handicap].name:LEVELS[G.level].name):(red?'红方':'黑方');
+  return '<div class="avatar '+(red?'red':'black')+'">'+(isAI?'将':'帅')+'</div>'+
+    '<div class="pmeta"><div class="pname">'+name+'<span class="tag">'+tag+'</span>'+(red?'<span class="tag">先行</span>':'')+'</div>'+
+    '<div class="psub">'+(capStr||'<span style="opacity:.5">未吃子</span>')+'</div></div>'+
+    '<div class="clock">'+fmt(G.clock[side])+'</div>';
+}
+function updateAll(){
+  const top=G.flipped?RED:BLACK,bot=1-top;
+  $('barTop').innerHTML=barHTML(top);
+  $('barBottom').innerHTML=barHTML(bot);
+  $('barTop').classList.toggle('active',!G.over&&G.turn===top);
+  $('barBottom').classList.toggle('active',!G.over&&G.turn===bot);
+
+  const cp=E.evaluate(G.board);
+  const pct=Math.round(100/(1+Math.exp(-cp/420)));
+  $('evalRed').style.width=Math.max(4,Math.min(96,pct))+'%';
+  const pawns=(cp/100).toFixed(1);
+  $('evalNum').textContent=(cp>0?'+':'')+pawns;
+  $('evalText').textContent=Math.abs(cp)<60?'局面均衡':(cp>0?'红方占优':'黑方占优');
+
+  const ml=$('moveList');
+  if(!G.history.length)ml.innerHTML='<div class="empty-hint">尚未落子</div>';
+  else{
+    let html='';
+    for(let i=0;i<G.history.length;i+=2){
+      const a=G.history[i],b=G.history[i+1];
+      const lastIdx=G.history.length-1;
+      html+='<div class="mv-row"><span class="mv-no">'+(i/2+1)+'</span>'+
+        '<span class="mv r'+(i===lastIdx?' last':'')+'">'+a.note+'</span>'+
+        '<span class="mv b'+(b?(i+1===lastIdx?' last':''):'')+'">'+(b?b.note:'')+'</span></div>';
+    }
+    ml.innerHTML=html;ml.scrollTop=ml.scrollHeight;
+  }
+
+  const st=$('statusLine');
+  if(!G.started)st.innerHTML='选择难度开始对局';
+  else if(G.over)st.innerHTML='对局结束 · <b>'+($('resultTitle').textContent||'')+'</b>';
+  else if(G.thinking)st.innerHTML=G.turn===G.human?'计算提示中…':'<b>AI 思考中…</b>';
+  else if(E.isInCheck(G.board,G.turn))st.innerHTML=G.turn===G.human?'<b>你被将军了！必须解将</b>':'<b>将军！</b>等待 AI 解将';
+  else st.innerHTML=G.turn===G.human?'<b>你的回合</b> · 点击棋子查看可走位置':'等待 AI 落子';
+
+  if(isMateMode()&&G.started&&!G.over){
+    const ls=MATE_LESSONS[G.mateIdx];
+    let msg;
+    if(G.mateMsg&&performance.now()<G.mateMsgUntil)msg='<b>'+G.mateMsg+'</b>';
+    else if(G.mateBusy)msg='<b>黑方应手中…</b>';
+    else if(E.isInCheck(G.board,BLACK))msg='<b style="color:#ff8b98">将军！黑方须解将</b>';
+    else msg='<b>轮到你照将</b> · 找出连杀着法';
+    st.innerHTML='<span style="color:#5f6f90">['+ls.name+' · 第 '+Math.max(1,Math.min(G.mateTotal,G.mateTotal-G.mateK+1))+'/'+G.mateTotal+' 手]</span> '+msg;
+  }
+
+  $('btnUndo').disabled=isMateMode()||!G.history.length;
+  $('btnHint').disabled=G.over||G.thinking||G.turn!==G.human||(isMateMode()&&G.mateBusy);
+  $('btnResign').disabled=isMateMode()||G.over||!G.started;
+  if(G.started&&!G.over){
+    const drill=isDrill();
+    const mlbl=G.mode==='time'?'限时 '+G.moveLimit+'s/步':G.mode==='ladder'?'等级 Lv'+(ladderLv()+1):drill?(curLesson().name+' · '+(G.goal==='hold'?'守满':'限')+' '+G.moveLimit+' 步 · 剩 '+G.moveLeft+' 步'):G.mode==='handicap'?HANDICAPS[G.handicap].name:'';
+    if(mlbl)st.innerHTML='<span style="color:#5f6f90">['+mlbl+']</span> '+st.innerHTML;
+  }
+  const mp=$('matePanel');
+  if(G.drillIdx>=0&&G.started&&(isMateMode()||G.mode==='puzzle')){mp.style.display='block';renderMatePanel();}
+  else mp.style.display='none';
+  refreshClocks();
+}
+function refreshClocks(){
+  const top=G.flipped?RED:BLACK;
+  for(const el of[$('barTop'),$('barBottom')]){
+    const side=el===$('barTop')?top:1-top;
+    const c=el.querySelector('.clock');if(!c)continue;
+    if(G.mode==='time'&&side===G.human){c.textContent=fmt(Math.max(0,G.moveLeft));c.classList.toggle('warn',G.moveLeft<=5&&!G.over&&G.started);}
+    else if(isDrill()&&side===G.human){c.textContent=Math.max(0,G.moveLeft)+' 步';c.classList.toggle('warn',G.moveLeft<=5&&!G.over&&G.started);}
+    else if(isMateMode()&&side===G.human){c.textContent='第 '+Math.max(1,Math.min(G.mateTotal,G.mateTotal-G.mateK+1))+'/'+G.mateTotal+' 手';c.classList.remove('warn');}
+    else{c.textContent=fmt(G.clock[side]);c.classList.remove('warn');}
+  }
+}
+
+setInterval(()=>{
+  if(!G.started||G.over||G.anim||modalOpen())return;
+  G.clock[G.turn]++;
+  if(G.mode==='time'&&G.turn===G.human){
+    G.moveLeft--;
+    if(G.moveLeft<=5&&G.moveLeft>0&&G.moveLeft!==G.lastTick){G.lastTick=G.moveLeft;SFX.tick();}
+    if(G.moveLeft<=0){G.moveLeft=0;refreshClocks();SFX.timeout();endGame(1-G.human,'超时判负 · 每步须在 '+G.moveLimit+'s 内落子');return;}
+  }
+  refreshClocks();
+},1000);
+
+/* ---------- 经典杀招训练 · 界面与结算 ---------- */
+function renderMatePanel(){
+  const ls=curDrill()||MATE_LESSONS[G.mateIdx],isPz=ls.kind==='puzzle';
+  const stars=MATE_PROGRESS[G.drillIdx]||0;
+  let dots='',msg='';
+  if(isPz){
+    const used=G.moveLimit-G.moveLeft,pct=Math.max(0,Math.min(100,Math.round(used/G.moveLimit*100)));
+    dots='<span class="mate-bar"><i style="width:'+pct+'%"></i></span><span>已走 '+used+'/'+G.moveLimit+' 步 · 剩 '+Math.max(0,G.moveLeft)+' 步</span>';
+    msg=(ls.goal==='hold'?'<b>守和名局</b> · 撑满规定步数即达成，AI 执黑全力进攻':'<b>限步取胜</b> · 在规定步数内取胜')+
+      ' · 按 <b>H</b> 可让 AI 给参考着法。';
+  }else{
+    const done=G.mateTotal-G.mateK;
+    for(let i=0;i<G.mateTotal;i++)dots+='<span class="mate-dot '+(i<done?'done':i===done?'cur':'')+'"></span>';
+    dots+='<span>'+done+' / '+G.mateTotal+' 手</span>';
+    msg=(G.mateMsg&&performance.now()<G.mateMsgUntil)?'<b>'+G.mateMsg+'</b>'
+      :'每手必须<b>照将</b>，且保证黑方所有应手都被连杀覆盖。走错不落子，可反复尝试。';
+  }
+  $('mateDetail').innerHTML=
+    '<div class="mate-head"><span class="n">'+ls.name+'</span><span class="c">第 '+(G.drillIdx+1)+'/'+DRILLS.length+' 关</span>'+
+      '<span class="c">'+ls.chapter+' · '+(isPz?ls.brief:ls.steps+' 步杀')+'</span>'+
+      (stars?'<span class="c" style="color:var(--gold)">'+'★'.repeat(stars)+'</span>':'')+'</div>'+
+    '<div class="mate-quest">'+ls.lore+'<span class="pt">'+ls.idea+'</span></div>'+
+    '<div class="mate-dots">'+dots+'</div>'+
+    '<div class="mate-line">'+msg+'<br>错着 '+G.mateErr+' · 提示 '+G.mateHints+' · '+ls.from+'</div>';
+}
+let mateFilter='all';
+const MATE_CHAPTERS=[...new Set(DRILLS.map(l=>l.chapter))];
+function renderMateOpts(){
+  const mt=$('mateTabs'),mo=$('mateOpts'),keep=mo.scrollTop;
+  mt.innerHTML='';mo.innerHTML='';
+  const tabs=[{id:'all',label:'全部 '+DRILLS.length}].concat(
+    MATE_CHAPTERS.map(c=>({id:c,label:c.slice(0,2)+' '+DRILLS.filter(l=>l.chapter===c).length})));
+  tabs.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='mate-tab'+(mateFilter===t.id?' sel':'');
+    b.textContent=t.label;
+    b.onclick=()=>{mateFilter=t.id;mo.scrollTop=0;refreshSetupUI();SFX.select();};
+    mt.appendChild(b);
+  });
+  MATE_CHAPTERS.forEach(ch=>{
+    if(mateFilter!=='all'&&mateFilter!==ch)return;
+    const list=DRILLS.map((l,i)=>({l,i})).filter(x=>x.l.chapter===ch);
+    const done=list.filter(x=>MATE_PROGRESS[x.i]>0).length;
+    const g=document.createElement('div');g.className='mate-group';
+    g.innerHTML='<span>'+ch+'</span><small>已通关 '+done+'/'+list.length+' · 共 '+list.length+' 关</small>';
+    mo.appendChild(g);
+    list.forEach(({l,i})=>{
+      const st=MATE_PROGRESS[i]||0;
+      const b=document.createElement('button');
+      b.className='opt mate-opt'+(st?' cleared':'');b.dataset.idx=i;
+      b.innerHTML='<div class="t">'+l.name+'</div>'+
+        '<div class="d">第 '+(i+1)+' 关 · '+l.brief+(st?'':' · 未通关')+'</div>'+
+        (st?'<span class="star">'+'★'.repeat(st)+'</span>':'');
+      b.onclick=()=>{setupDrill=i;refreshSetupUI();SFX.select();};
+      mo.appendChild(b);
+    });
+  });
+  mo.scrollTop=keep;
+}
+function mateWrong(){
+  G.mateErr++;
+  G.selected=-1;G.legal=[];      // 走错后取消选中，避免吞掉下一次选子
+  SFX.illegal();
+  frame.classList.remove('shake');void frame.offsetWidth;frame.classList.add('shake');
+  G.mateMsg='此着不能保持连将杀 · 再想想（须在 '+G.mateK+' 手内成杀）';
+  G.mateMsgUntil=performance.now()+2800;
+  updateAll();
+}
+function mateStars(){return Math.max(1,3-G.mateErr-(G.mateHints>0?1:0));}
+function mateModalStats(secs){
+  $('mateStTime').textContent=fmt(secs);
+  $('mateStErr').textContent=G.mateErr;
+  $('mateStHint').textContent=G.mateHints;
+}
+function mateClear(reason){
+  if(G.mateDone)return;
+  G.mateDone=true;G.over=true;G.selected=-1;G.legal=[];G.mateBusy=false;
+  cancelSearch();
+  const stars=mateStars(),ls=curDrill()||MATE_LESSONS[G.mateIdx],idx=G.drillIdx>=0?G.drillIdx:G.mateIdx;
+  const isPz=ls.kind==='puzzle';
+  if(stars>(MATE_PROGRESS[idx]||0)){MATE_PROGRESS[idx]=stars;mateSaveProgress();}
+  const secs=(Date.now()-G.mateStart)/1000|0;
+  $('mateModalTag').textContent=ls.chapter;
+  $('mateModalTitle').textContent=isPz?'残 局 达 成':'杀 招 达 成';
+  $('mateModalSub').textContent=ls.name+' · '+(reason||(isPz?'挑战达成':'连将绝杀'))+' · 第 '+(idx+1)+'/'+DRILLS.length+' 关';
+  $('mateStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
+  $('mateStars').style.color='#ffce6a';
+  $('mateModalNote').innerHTML='<div class="ttl">'+ls.name+'</div><div class="src">'+ls.from+'</div>'+
+    '<div>'+ls.lore+'</div><div class="pt">'+ls.idea+'</div>';
+  mateModalStats(secs);
+  const last=idx>=DRILLS.length-1;
+  $('btnMateNext').textContent=last?'全部通关':'下一关';
+  showBanner(isPz?'达成':'绝杀','#ffce6a');SFX.win();
+  for(let i=0;i<7;i++)setTimeout(()=>burst(PAD+Math.random()*8*CELL,PAD+Math.random()*9*CELL,['#ffce6a','#ff5a72','#3ce4ff','#8ef0d0'][i%4],30),i*130);
+  updateAll();
+  setTimeout(()=>$('mateModal').classList.add('on'),850);
+}
+function mateFail(reason){
+  if(G.mateDone)return;
+  G.mateDone=true;G.over=true;G.selected=-1;G.legal=[];G.mateBusy=false;
+  cancelSearch();
+  const ls=curDrill()||MATE_LESSONS[G.mateIdx],secs=(Date.now()-G.mateStart)/1000|0;
+  $('mateModalTag').textContent=ls.kind==='puzzle'?'挑战失败':'连杀中断';
+  $('mateModalTitle').textContent='未 竟 全 功';
+  $('mateModalSub').textContent=reason||'本关未完成';
+  $('mateStars').textContent='☆☆☆';
+  $('mateStars').style.color='#7f93b8';
+  $('mateModalNote').innerHTML='<div class="ttl">'+ls.name+'</div><div class="src">'+ls.from+'</div>'+
+    '<div>'+ls.lore+'</div><div class="pt">'+ls.idea+'</div>';
+  mateModalStats(secs);
+  $('btnMateNext').textContent='下一关';
+  showBanner('失手','#7f93b8');SFX.lose();
+  updateAll();
+  setTimeout(()=>$('mateModal').classList.add('on'),700);
+}
+/* 统一入口：按关卡类型分派到底层的 mate（连将杀）或 puzzle（AI 陪练守和/限步） */
+function drillStart(i){
+  const idx=Math.max(0,Math.min(DRILLS.length-1,i)),d=DRILLS[idx];
+  G.drillIdx=idx;
+  $('setupModal').classList.remove('on');$('overModal').classList.remove('on');$('mateModal').classList.remove('on');
+  newGame(1,RED,d.kind==='mate'?'mate':'puzzle',G.moveLimit,d.srcIdx);
+}
+function mateRestart(){drillStart(G.drillIdx>=0?G.drillIdx:0);}
+function mateGoto(i){drillStart(i);}
+function mateOpenSelect(){
+  cancelSearch();
+  $('mateModal').classList.remove('on');$('overModal').classList.remove('on');
+  setupMode='drill';setupDrill=G.drillIdx>=0?G.drillIdx:0;
+  const d=curDrill();if(d)mateFilter=d.chapter;
+  refreshSetupUI();
+  $('setupModal').classList.add('on');
+}
+
+/* ---------- 输入 ---------- */
+G.hover=-1;
+function pointerPos(ev){
+  const r=boardCv.getBoundingClientRect();
+  return{x:(ev.clientX-r.left)*(BW/r.width),y:(ev.clientY-r.top)*(BH/r.height)};
+}
+boardCv.addEventListener('pointermove',ev=>{
+  const p=pointerPos(ev);G.hover=fromXY(p.x,p.y);
+});
+boardCv.addEventListener('pointerleave',()=>{G.hover=-1;});
+boardCv.addEventListener('pointerdown',ev=>{
+  ac();
+  if(!G.started||G.over||G.anim||G.thinking||G.turn!==G.human||G.mateBusy)return;
+  const p=pointerPos(ev),i=fromXY(p.x,p.y);
+  if(i<0){G.selected=-1;G.legal=[];return;}
+  const q=G.board[i];
+  if(G.selected>=0){
+    const m=G.selected*90+i;
+    if(G.legal.indexOf(m)>=0){
+      if(isMateMode()&&!mateAccept(m)){mateWrong();return;}
+      playMove(m);return;
+    }
+  }
+  if(q&&E.sideOf(q)===G.human){
+    if(G.selected===i){G.selected=-1;G.legal=[];return;}
+    G.selected=i;G.hint=null;
+    G.legal=E.legalMoves(G.board,G.human).filter(m=>((m/90)|0)===i);
+    SFX.select();
+    if(!G.legal.length)SFX.illegal();
+  }else{
+    if(G.selected>=0)SFX.illegal();
+    G.selected=-1;G.legal=[];
+  }
+});
+
+/* ---------- 控件 ---------- */
+let setupLevel=1,setupSide=RED,setupMode='classic',setupLimit=30,setupHandicap=0,setupDrill=0;
+const lo=$('levelOpts');
+LEVELS.forEach((l,i)=>{
+  const b=document.createElement('button');
+  b.className='opt'+(i===setupLevel?' sel':'');
+  b.innerHTML='<div class="t">'+l.name+'</div><div class="d">'+l.desc+'</div>';
+  b.onclick=()=>{setupLevel=i;[...lo.children].forEach((c,j)=>c.classList.toggle('sel',j===i));SFX.select();};
+  lo.appendChild(b);
+});
+function introHTML(x,kind){
+  if(kind==='mate'){
+    return '<div class="ttl">'+x.name+'<span class="tag">'+x.chapter+' · '+x.steps+' 步杀</span></div>'+
+      '<div class="src">'+x.from+'</div>'+
+      '<div>'+x.lore+'</div><div class="pt">'+x.idea+'</div>'+
+      '<div style="margin-top:6px;color:#8ef0d0">参考首着：<b>'+x.key+'</b>（也存在等效杀着）</div>'+
+      '<div style="margin-top:7px;color:#7f93b8">目标：执红在 <b>'+x.steps+'</b> 手内连将绝杀。'+
+      '每手必须照将，黑方自动走出最顽强应手；走错不落子，可按 <b>H</b> 查看杀招提示。</div>';
+  }
+  const goal=x.goal==='hold'
+    ?'目标：执红守住 <b>'+x.moves+'</b> 步不败（AI 执黑全力进攻，守住即为达成）'
+    :'目标：在 <b>'+x.moves+'</b> 步内取胜';
+  return '<div class="ttl">'+x.name+'<span class="tag">'+(x.goal==='hold'?'名局守和':'限步取胜')+'</span></div>'+
+    '<div class="src">出处 · '+(x.from||'象棋古谱')+'</div>'+
+    (x.lore?'<div>'+x.lore+'</div>':'')+
+    (x.idea?'<div class="pt">'+x.idea+'</div>':'')+
+    '<div style="margin-top:7px;color:#7f93b8">'+goal+'</div>';
+}
+const ho=$('handicapOpts');
+HANDICAPS.forEach((h,i)=>{
+  const b=document.createElement('button');
+  b.className='opt'+(i===setupHandicap?' sel':'');
+  b.innerHTML='<div class="t">'+h.name+'</div><div class="d">'+h.desc+'</div>';
+  b.onclick=()=>{setupHandicap=i;[...ho.children].forEach((c,j)=>c.classList.toggle('sel',j===i));SFX.select();};
+  ho.appendChild(b);
+});
+$('sideOpts').querySelectorAll('.opt').forEach(b=>{
+  b.onclick=()=>{setupSide=+b.dataset.side;$('sideOpts').querySelectorAll('.opt').forEach(x=>x.classList.toggle('sel',x===b));SFX.select();};
+});
+function refreshSetupUI(){
+  $('modeOpts').querySelectorAll('.opt').forEach(x=>x.classList.toggle('sel',x.dataset.mode===setupMode));
+  $('limitOpts').querySelectorAll('.opt').forEach(x=>x.classList.toggle('sel',+x.dataset.limit===setupLimit));
+  [...ho.children].forEach((c,j)=>c.classList.toggle('sel',j===setupHandicap));
+  const isTime=setupMode==='time',isLadder=setupMode==='ladder',
+        isHandicap=setupMode==='handicap',isDrillMode=setupMode==='drill';
+  if(isDrillMode)renderMateOpts();
+  const mo=$('mateOpts'),mt=$('mateTabs');
+  mo.querySelectorAll('.mate-opt').forEach(c=>c.classList.toggle('sel',+c.dataset.idx===setupDrill));
+  $('mateLabel').style.display=isDrillMode?'':'none';
+  mt.style.display=isDrillMode?'':'none';
+  mo.style.display=isDrillMode?'':'none';
+  $('mateIntro').style.display=isDrillMode?'':'none';
+  if(isDrillMode){
+    const cleared=DRILLS.filter((x,i)=>MATE_PROGRESS[i]>0).length;
+    const stars=DRILLS.reduce((s,x,i)=>s+(MATE_PROGRESS[i]||0),0);
+    $('mateLabel').textContent='训练闯关 · '+MATE_CHAPTERS.length+' 章 '+DRILLS.length+' 关　已通关 '+cleared+' 关 · 累计 '+stars+' 星（★ 为已通关）';
+    const d=DRILLS[setupDrill]||DRILLS[0];
+    $('mateIntro').innerHTML=introHTML(d,d.kind);
+  }
+  $('limitLabel').style.display=isTime?'':'none';
+  $('limitOpts').style.display=isTime?'':'none';
+  $('handicapLabel').style.display=isHandicap?'':'none';
+  ho.style.display=isHandicap?'':'none';
+  const hideLevel=isLadder||isDrillMode,hideSide=isHandicap||isDrillMode;
+  $('levelLabel').style.display=hideLevel?'none':'';
+  lo.style.display=hideLevel?'none':'';
+  $('sideLabel').style.display=hideSide?'none':'';
+  $('sideOpts').style.display=hideSide?'none':'';
+  $('ladderInfo').style.display=isLadder?'':'none';
+  if(isLadder){const s=ladderLv();
+    $('ladderInfo').textContent='累计 '+wins+' 胜 · 当前 Lv'+(s+1)+' '+LADDER[s].name+(s<LADDER.length-1?' · 每 3 胜升一级，再胜 '+(3-wins%3)+' 局升级':' · 已达棋圣巅峰');}
+}
+$('modeOpts').querySelectorAll('.opt').forEach(b=>{b.onclick=()=>{setupMode=b.dataset.mode;refreshSetupUI();SFX.select();};});
+$('limitOpts').querySelectorAll('.opt').forEach(b=>{b.onclick=()=>{setupLimit=+b.dataset.limit;refreshSetupUI();SFX.select();};});
+const extraFor=m=>m==='handicap'?setupHandicap:0;
+const extraLive=()=>G.mode==='puzzle'?G.puzzleIdx:G.mode==='mate'?G.mateIdx:G.handicap;
+$('btnStart').onclick=()=>{
+  ac();
+  if(setupMode==='drill'){drillStart(setupDrill);return;}
+  $('setupModal').classList.remove('on');
+  newGame(setupLevel,setupSide,setupMode,setupLimit,extraFor(setupMode));
+};
+$('btnSetup').onclick=()=>{
+  setupLevel=G.level;setupSide=G.human;setupLimit=G.moveLimit;setupHandicap=G.handicap;
+  setupMode=(G.mode==='mate'||G.mode==='puzzle')&&G.drillIdx>=0?'drill':G.mode;
+  setupDrill=G.drillIdx>=0?G.drillIdx:0;
+  [...lo.children].forEach((c,j)=>c.classList.toggle('sel',j===setupLevel));
+  $('sideOpts').querySelectorAll('.opt').forEach(x=>x.classList.toggle('sel',+x.dataset.side===setupSide));
+  refreshSetupUI();
+  cancelSearch();
+  $('setupModal').classList.add('on');
+};
+$('btnAgain').onclick=()=>{$('overModal').classList.remove('on');newGame(G.level,G.human,G.mode,G.moveLimit,extraLive());};
+$('btnReview').onclick=()=>$('overModal').classList.remove('on');
+$('btnRestart').onclick=()=>{if(G.drillIdx>=0){mateRestart();return;}if(G.started)newGame(G.level,G.human,G.mode,G.moveLimit,extraLive());else $('btnSetup').click();};
+$('btnUndo').onclick=undo;
+$('btnHint').onclick=hint;
+$('btnResign').onclick=resign;
+$('btnMateHint').onclick=()=>hint();
+$('btnMateRestart').onclick=mateRestart;
+$('btnMateSelect').onclick=mateOpenSelect;
+$('btnMateAgain').onclick=mateRestart;
+$('btnMateClose').onclick=mateOpenSelect;
+$('btnMateNext').onclick=()=>{const n=G.drillIdx+1;if(n<DRILLS.length)mateGoto(n);else mateOpenSelect();};
+$('btnFlip').onclick=()=>{G.flipped=!G.flipped;buildBG();updateAll();SFX.select();};
+$('btnSound').onclick=()=>{
+  G.sound=!G.sound;SET.sound=G.sound;persistSet();
+  $('btnSound').classList.toggle('off',!G.sound);
+  $('wave').style.opacity=G.sound?1:.2;
+  if(G.sound)SFX.select();
+};
+$('btnMusic').onclick=()=>{
+  ac();G.music=!G.music;SET.music=G.music;persistSet();
+  $('btnMusic').classList.toggle('off',!G.music);
+  if(G.music)startMusic();else stopMusic();
+};
+
+/* ---------- 设置面板 ---------- */
+function renderSettings(){
+  const to=$('themeOpts');to.innerHTML='';
+  THEMES.forEach(t=>{
+    const b=document.createElement('button');b.className='opt'+(SET.theme===t.id?' sel':'');
+    b.innerHTML='<div class="t"><span class="swatch" style="background:linear-gradient(135deg,'+t.bg[0]+','+t.red.g[0]+' 55%,'+t.blk.g[0]+')"></span>'+t.name+'</div>';
+    b.onclick=()=>{SET.theme=t.id;G.theme=t.id;persistSet();buildBG();updateAll();renderSettings();SFX.select();};
+    to.appendChild(b);
+  });
+  const so=$('bgmStyleOpts');so.innerHTML='';
+  BGM_STYLES.forEach(s=>{
+    const b=document.createElement('button');b.className='opt'+(SET.bgmStyle===s.id?' sel':'');
+    b.innerHTML='<div class="t">'+s.name+'</div>';
+    b.onclick=()=>{SET.bgmStyle=s.id;persistSet();applyBGM();renderSettings();SFX.select();};
+    so.appendChild(b);
+  });
+  const cb=document.createElement('button');cb.className='opt'+(SET.bgmStyle==='custom'?' sel':'');
+  cb.innerHTML='<div class="t">自定义</div><div class="d">本地音频</div>';
+  cb.onclick=()=>$('bgmFile').click();
+  so.appendChild(cb);
+  $('bgmFileName').textContent=SET.bgmName?('♪ '+SET.bgmName+(SET.bgmStyle==='custom'?'':'（未启用）')):'支持 mp3 / ogg / wav 等本地音频';
+  $('bgmTempo').value=SET.bgmTempo;$('bgmTempoVal').textContent=SET.bgmTempo+' BPM';
+  $('bgmVol').value=Math.round(SET.bgmVol*100);$('bgmVolVal').textContent=Math.round(SET.bgmVol*100)+'%';
+  $('sfxVol').value=Math.round(SET.sfxVol*100);$('sfxVolVal').textContent=Math.round(SET.sfxVol*100)+'%';
+}
+$('bgmFile').addEventListener('change',e=>{setCustomBGM(e.target.files[0]);e.target.value='';});
+$('btnBgmFile').onclick=()=>$('bgmFile').click();
+$('bgmTempo').addEventListener('input',e=>{SET.bgmTempo=+e.target.value;$('bgmTempoVal').textContent=SET.bgmTempo+' BPM';persistSet();});
+$('bgmVol').addEventListener('input',e=>{SET.bgmVol=+e.target.value/100;$('bgmVolVal').textContent=e.target.value+'%';if(customAudio)customAudio.volume=SET.bgmVol;persistSet();});
+$('sfxVol').addEventListener('input',e=>{SET.sfxVol=+e.target.value/100;$('sfxVolVal').textContent=e.target.value+'%';persistSet();SFX.select();});
+$('btnSettings').onclick=()=>{cancelSearch();renderSettings();$('settingsModal').classList.add('on');};
+$('btnSetClose').onclick=()=>{$('settingsModal').classList.remove('on');if(G.started&&!G.over&&G.turn!==G.human&&!G.thinking)requestAI();};
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  const k=e.key.toLowerCase();
+  if(k==='h')hint();else if(k==='u')undo();else if(k==='f')$('btnFlip').click();
+  else if(k==='m')$('btnSound').click();
+  else if(k==='r'&&G.drillIdx>=0)mateRestart();
+  else if(k==='['&&G.drillIdx>0&&G.started)mateGoto(G.drillIdx-1);
+  else if(k===']'&&G.drillIdx>=0&&G.drillIdx<DRILLS.length-1&&G.started)mateGoto(G.drillIdx+1);
+  else if(k==='escape'){const wasModal=modalOpen();$('setupModal').classList.remove('on');$('overModal').classList.remove('on');$('settingsModal').classList.remove('on');$('mateModal').classList.remove('on');
+    if(wasModal&&G.started&&!G.over&&G.turn!==G.human&&!G.thinking)requestAI();}
+});
+window.addEventListener('resize',resize);
+
+/* ---------- 启动 ---------- */
+if(SET.bgmStyle==='custom'&&!customAudio)SET.bgmStyle='guzheng';
+$('btnSound').classList.toggle('off',!G.sound);
+$('wave').style.opacity=G.sound?1:.2;
+$('btnMusic').classList.toggle('off',!G.music);
+refreshSetupUI();
+resize();updateAll();requestAnimationFrame(loop);
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
