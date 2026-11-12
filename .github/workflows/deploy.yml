@@ -43,6 +43,8 @@ jobs:
           cd dist && zip -r ../xuanqi-pwa.zip .
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true   # 首次部署自动启用 Pages，无需手动到 Settings 里设置
 
       - uses: actions/upload-pages-artifact@v3
         with:
