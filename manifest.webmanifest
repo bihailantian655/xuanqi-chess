@@ -1,0 +1,17 @@
+{
+  "name": "玄棋 · 中国象棋人机对战",
+  "short_name": "玄棋",
+  "description": "六大对局模式、91 关古谱残局、AI 棋力分级与实时局面评估。手机竖屏单手可玩的中国象棋。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05070f",
+  "theme_color": "#05070f",
+  "lang": "zh-CN",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
