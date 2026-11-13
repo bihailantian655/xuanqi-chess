@@ -10,8 +10,8 @@
   --red:#ff4d63; --red-soft:#ff8b98; --cyan:#2fe0ff; --cyan-soft:#9df0ff;
   --gold:#ffce6a; --txt:#dce7f7; --dim:#7d8db0;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;-webkit-tap-highlight-color:transparent}
 body{
   background:var(--bg); color:var(--txt); overflow-x:hidden;
   font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
@@ -115,8 +115,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 }
 .board-frame.shake{}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
-canvas#board{display:block;width:100%;height:auto;border-radius:15px;touch-action:manipulation;cursor:pointer}
-canvas#fx{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);pointer-events:none;border-radius:15px}
+canvas#board{display:block;width:100%;height:auto;border-radius:15px;touch-action:manipulation;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+canvas#fx{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);pointer-events:none;border-radius:15px;-webkit-tap-highlight-color:transparent}
 
 .banner{
   position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(.6);
