@@ -1,0 +1,73 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'icons/**'
+      - 'capacitor.config.json'
+      - 'prepare-web.py'
+      - 'android-icons/**'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Prepare web assets
+        run: |
+          python3 prepare-web.py
+          ls -lh www/
+
+      - name: Install Capacitor
+        run: npm install --no-audit --no-fund @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+
+      - name: Generate Android project
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Apply XuanQi launcher icon
+        run: |
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            dir="android/app/src/main/res/mipmap-$d"
+            mkdir -p "$dir"
+            cp "android-icons/$d.png" "$dir/ic_launcher.png"
+            cp "android-icons/$d.png" "$dir/ic_launcher_round.png"
+          done
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+
+      - name: Build debug APK
+        run: cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/xuanqi-chess.apk
+          ls -lh out/xuanqi-chess.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xuanqi-android-apk
+          path: out/xuanqi-chess.apk
+          if-no-files-found: error

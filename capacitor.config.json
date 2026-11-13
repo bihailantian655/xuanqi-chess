@@ -1,0 +1,8 @@
+{
+  "appId": "com.bihailantian655.xuanqi",
+  "appName": "玄棋",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
