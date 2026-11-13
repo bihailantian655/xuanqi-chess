@@ -1,5 +1,5 @@
 // 玄棋 PWA：离线缓存。全部使用相对路径，兼容 GitHub Pages 的 /<repo>/ 子路径。
-const CACHE = 'xuanqi-v1';
+const CACHE = 'xuanqi-v2'; // 去闪屏版本：升版让已安装用户拉到新页面
 const ASSETS = [
   './',
   './index.html',
